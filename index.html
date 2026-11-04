@@ -201,5 +201,121 @@
     }
 
 </script>
+<style>
+  /* ===== לשונית קטנה בפינה הימנית העליונה ===== */
+  #hub-tab{
+    position:fixed; top:8px; right:8px; z-index:500;
+    width:46px; height:46px; border-radius:50%;
+    background:#43225A; border:3px solid #fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.45);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  #hub-tab svg{width:26px;height:26px;display:block}
+
+  /* ===== הפאנל, נפתח רק בנגיעה בלשונית ===== */
+  #hub{
+    position:fixed; inset:0; z-index:600; display:none;
+    background:rgba(16,8,24,.88);
+    align-items:center; justify-content:center;
+    direction:rtl; font-family:system-ui,"Segoe UI",sans-serif;
+  }
+  #hub.open{display:flex}
+  #hub-card{
+    background:#43225A; border-radius:22px; padding:18px 22px 20px;
+    box-shadow:0 10px 40px rgba(0,0,0,.6); text-align:center;
+    max-width:92vw;
+  }
+  #hub-card h2{
+    color:#fff; margin:0 0 14px; font-size:19px; font-weight:800; letter-spacing:.2px;
+  }
+  #hub-row{display:flex; gap:12px; justify-content:center; flex-wrap:wrap}
+  .hub-btn{
+    width:148px; min-height:104px; border-radius:16px; border:none;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px;
+    color:#fff; font-size:15px; font-weight:800; line-height:1.25; cursor:pointer;
+    padding:10px 8px; box-shadow:0 3px 0 rgba(0,0,0,.25);
+  }
+  .hub-btn small{display:block; font-size:12px; font-weight:600; opacity:.92}
+  .b1{background:#3B6BB2}
+  .b2{background:#F2A412}
+  .b3{background:#189E8A}
+  .hub-btn svg{width:34px;height:34px;display:block}
+  #hub-close{
+    margin-top:14px; background:none; border:none; color:#fff; opacity:.75;
+    font-size:14px; font-weight:700; cursor:pointer;
+  }
+</style>
+
+<div id="hub-tab" aria-label="עוד">
+  <!-- דלת קטנה, אותה שפה של הדלת שעל הקליד -->
+  <svg viewBox="0 0 24 24" fill="none">
+    <rect x="4.5" y="2.5" width="15" height="19" rx="2.5" fill="#F2A412" stroke="#fff" stroke-width="1.6"/>
+    <rect x="7.5" y="6" width="4" height="5" rx=".8" fill="#43225A"/>
+    <rect x="12.5" y="6" width="4" height="5" rx=".8" fill="#43225A"/>
+    <circle cx="9" cy="15.5" r="1.3" fill="#43225A"/>
+  </svg>
+</div>
+
+<div id="hub">
+  <div id="hub-card">
+    <h2>מה עושים עכשיו?</h2>
+    <div id="hub-row">
+      <button class="hub-btn b1">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M3.5 5.5c3-1.2 5.5-1.2 8.5.4 3-1.6 5.5-1.6 8.5-.4v13c-3-1.2-5.5-1.2-8.5.4-3-1.6-5.5-1.6-8.5-.4v-13Z" fill="#fff" opacity=".95"/>
+          <path d="M12 5.9v13" stroke="#3B6BB2" stroke-width="1.5"/>
+        </svg>
+        הסיפור של המשפחה
+      </button>
+      <button class="hub-btn b2">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect x="2.5" y="3.5" width="8.5" height="8.5" rx="1.6" fill="#fff"/>
+          <rect x="13" y="3.5" width="8.5" height="8.5" rx="1.6" fill="#fff" opacity=".55"/>
+          <rect x="2.5" y="13.5" width="8.5" height="8.5" rx="1.6" fill="#fff" opacity=".55"/>
+          <rect x="13" y="13.5" width="8.5" height="8.5" rx="1.6" fill="#fff"/>
+        </svg>
+        משחק הזיכרון
+      </button>
+      <button class="hub-btn b3">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M3 7h18M3 11h18M3 15h18M3 19h18" stroke="#fff" stroke-width="1.3" opacity=".8"/>
+          <circle cx="9" cy="15" r="2.6" fill="#fff"/>
+          <path d="M11.6 15V5.6l6 -1.4V13" stroke="#fff" stroke-width="1.8" fill="none"/>
+          <circle cx="15.6" cy="13.2" r="2.4" fill="#fff"/>
+        </svg>
+        ללמוד תווים
+        <small>התנסות חינם</small>
+      </button>
+    </div>
+    <button id="hub-close">חזרה לנגינה</button>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var tab=document.getElementById('hub-tab'), hub=document.getElementById('hub'),
+        close=document.getElementById('hub-close');
+    function open(e){ e.preventDefault(); e.stopPropagation(); hub.classList.add('open'); }
+    function shut(e){ e.preventDefault(); e.stopPropagation(); hub.classList.remove('open'); }
+    // טאץ' משלהם, כי הדף חוסם את מחוות הברירת מחדל
+    ['touchstart','mousedown'].forEach(function(ev){
+      tab.addEventListener(ev,open,{passive:false});
+      close.addEventListener(ev,shut,{passive:false});
+      hub.addEventListener(ev,function(e){ if(e.target===hub) shut(e); },{passive:false});
+    });
+  })();
+</script>
+<style>.hub-btn.pressed{transform:scale(.94);box-shadow:0 1px 0 rgba(0,0,0,.25)}</style>
+<script>
+(function(){
+ document.querySelectorAll('.hub-btn').forEach(function(b){
+  ['touchstart','mousedown'].forEach(function(ev){
+    b.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();
+      b.classList.add('pressed');setTimeout(function(){b.classList.remove('pressed')},220);},{passive:false});
+  });
+ });
+})();
+</script>
 </body>
 </html>
