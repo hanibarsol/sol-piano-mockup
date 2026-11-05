@@ -304,5 +304,19 @@
   });
 })();
 </script>
+<style>
+  /* מדידה לפי הגובה שבאמת נראה, לא לפי גובה המסך התיאורטי.
+     השורה הראשונה היא גיבוי לדפדפנים ישנים, השנייה היא האמיתית. */
+  html,body{height:100%}
+  #panel{ height:20vh; height:20dvh; }
+  #piano-scroll-wrapper{
+    height:80vh !important;  margin-top:20vh;
+    height:80dvh !important; margin-top:20dvh;
+  }
+  .character-img{
+    margin-bottom:clamp(8px,calc(32vh - 66px),48px);
+    margin-bottom:clamp(8px,calc(32dvh - 66px),48px);
+  }
+</style>
 </body>
 </html>
