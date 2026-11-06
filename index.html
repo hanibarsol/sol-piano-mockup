@@ -584,5 +584,39 @@ window.initTouchControls = function(){
   });
 })();
 </script>
+<script>
+(function(){
+  var VIDEO='https://www.youtube-nocookie.com/embed/vUjIHSO2kzI?rel=0&playsinline=1&modestbranding=1';
+  var box=document.getElementById('game'),
+      frame=document.getElementById('game-frame'),
+      back=document.getElementById('game-back'),
+      padVideo=document.querySelector('.pad-wrap.p1');
+
+  frame.setAttribute('allow','autoplay; encrypted-media; picture-in-picture; fullscreen');
+  frame.setAttribute('allowfullscreen','');
+
+  var kind=null;
+
+  function openVideo(e){
+    e.preventDefault(); e.stopPropagation();
+    kind='video';
+    frame.title='הסיפור של המשפחה';
+    if(frame.src!==VIDEO) frame.src=VIDEO;
+    box.classList.add('open');
+  }
+  ['touchstart','mousedown'].forEach(function(ev){
+    if(padVideo) padVideo.addEventListener(ev,openVideo,{passive:false});
+    /* בסגירה: סרטון חייב להיפסק, משחק נשאר כדי לא לאבד התקדמות */
+    back.addEventListener(ev,function(){
+      if(kind==='video'){ frame.src='about:blank'; kind=null; }
+    },{passive:false});
+  });
+  /* המשחק מסמן את עצמו, כדי שהסגירה תדע להשאיר אותו */
+  var padGame=document.querySelector('.pad-wrap.p2');
+  if(padGame) ['touchstart','mousedown'].forEach(function(ev){
+    padGame.addEventListener(ev,function(){ kind='game'; },{passive:false});
+  });
+})();
+</script>
 </body>
 </html>
