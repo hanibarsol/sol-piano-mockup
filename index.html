@@ -563,24 +563,10 @@ window.initTouchControls = function(){
 
 <script>
 (function(){
-  var GAME_URL='https://hanibarsol.github.io/sol-game-memory-five/';
-  var box=document.getElementById('game'),
-      frame=document.getElementById('game-frame'),
-      back=document.getElementById('game-back'),
-      pad=document.querySelector('.pad-wrap.p2');
-
-  function open(e){
-    e.preventDefault(); e.stopPropagation();
-    if(frame.src!==GAME_URL) frame.src=GAME_URL;   /* נטען רק בפעם הראשונה */
-    box.classList.add('open');
-  }
-  function close(e){
-    e.preventDefault(); e.stopPropagation();
-    box.classList.remove('open');
-  }
+  /* שכבת תצוגה גנרית. אין כאן שום קישור לשיעורי הפלטפורמה. */
+  var box=document.getElementById('game'), back=document.getElementById('game-back');
   ['touchstart','mousedown'].forEach(function(ev){
-    if(pad) pad.addEventListener(ev,open,{passive:false});
-    back.addEventListener(ev,close,{passive:false});
+    back.addEventListener(ev,function(e){ e.preventDefault(); e.stopPropagation(); box.classList.remove('open'); },{passive:false});
   });
 })();
 </script>
