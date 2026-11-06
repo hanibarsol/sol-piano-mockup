@@ -318,5 +318,26 @@
     margin-bottom:clamp(8px,calc(32dvh - 66px),48px);
   }
 </style>
+<style>
+  /* הכיתוב עובר לצד האייקון, ושומרים אוויר מעל קו האור */
+  #panel{ padding-bottom:7px; gap:clamp(10px,3vw,40px); }
+  .pad-wrap{
+    flex-direction:row; align-items:center;
+    gap:clamp(5px,1.2vw,10px);
+  }
+  .pad{
+    width:clamp(32px,13dvh,48px); height:clamp(32px,13dvh,48px);
+    border-radius:clamp(6px,2.2dvh,11px);
+  }
+  .pad-wrap span{ font-size:clamp(9px,3.4dvh,15px); }
+</style>
+<style>
+  /* במסך צר (טלפון לאורך) חוזרים לכיתוב מתחת לאייקון, שם יש מספיק גובה */
+  @media (max-width:700px){
+    .pad-wrap{ flex-direction:column; gap:clamp(3px,1vh,7px) }
+    #panel{ gap:clamp(8px,3vw,24px) }
+    .pad-wrap span{ font-size:clamp(9px,1.5dvh,13px) }
+  }
+</style>
 </body>
 </html>
