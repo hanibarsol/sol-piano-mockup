@@ -455,5 +455,71 @@
   if(w) w.dataset.soon='כאן ייפתח הסיפור של המשפחה';
 })();
 </script>
+<script>
+/* אקורדים: החלפת מנגנון המגע כך שכל אצבע מנוהלת בנפרד.
+   הפונקציה המקורית נקראת רק אחרי מסך הפתיחה, ולכן מספיק להחליף אותה כאן. */
+window.initTouchControls = function(){
+  var byFinger = {};           /* מזהה אצבע -> הקליד שהיא מחזיקה */
+  var holds = new WeakMap();   /* קליד -> כמה אצבעות מחזיקות אותו */
+
+  function keyAt(t){
+    var el = document.elementFromPoint(t.clientX, t.clientY);
+    return el ? el.closest('.key') : null;
+  }
+  function press(k){
+    if(!k) return;
+    var n = (holds.get(k) || 0) + 1;
+    holds.set(k, n);
+    if(n === 1){                       /* רק האצבע הראשונה מתחילה את הצליל */
+      k.classList.add('active');
+      try{ sampler.triggerAttack(k.dataset.note); }catch(err){}
+    }
+  }
+  function lift(k){
+    if(!k) return;
+    var n = (holds.get(k) || 1) - 1;
+    holds.set(k, n < 0 ? 0 : n);
+    if(n <= 0){                        /* רק כשהאצבע האחרונה עזבה */
+      k.classList.remove('active');
+      try{ sampler.triggerRelease(k.dataset.note); }catch(err){}
+    }
+  }
+  function offLimits(e){
+    return !!(e.target.closest && (e.target.closest('#panel') || e.target.closest('#howto')));
+  }
+
+  document.addEventListener('touchstart', function(e){
+    if(offLimits(e)) return;
+    e.preventDefault();
+    for(var i=0;i<e.changedTouches.length;i++){
+      var t = e.changedTouches[i], k = keyAt(t);
+      if(k){ byFinger[t.identifier] = k; press(k); }
+    }
+  }, {passive:false});
+
+  document.addEventListener('touchmove', function(e){
+    if(offLimits(e)) return;
+    e.preventDefault();
+    for(var i=0;i<e.changedTouches.length;i++){
+      var t = e.changedTouches[i], k = keyAt(t), prev = byFinger[t.identifier];
+      if(k !== prev){
+        if(prev) lift(prev);
+        if(k){ press(k); byFinger[t.identifier] = k; }
+        else { delete byFinger[t.identifier]; }
+      }
+    }
+  }, {passive:false});
+
+  function finger_up(e){
+    e.preventDefault();
+    for(var i=0;i<e.changedTouches.length;i++){
+      var t = e.changedTouches[i], prev = byFinger[t.identifier];
+      if(prev){ lift(prev); delete byFinger[t.identifier]; }
+    }
+  }
+  document.addEventListener('touchend', finger_up, {passive:false});
+  document.addEventListener('touchcancel', finger_up, {passive:false});
+};
+</script>
 </body>
 </html>
