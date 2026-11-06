@@ -429,5 +429,31 @@
   });
 })();
 </script>
+<style>
+  /* בלי מלל, והכריות נצמדות לימין. הפאנל כבר בכיוון ימין לשמאל,
+     ולכן flex-start מציב אותן בצד ימין. */
+  .pad-wrap span{ display:none }
+  #panel{
+    justify-content:flex-start;
+    padding-right:max(14px,env(safe-area-inset-right,0px));
+    gap:clamp(10px,2.2vw,22px);
+  }
+  @media (max-width:700px){
+    #panel{ gap:clamp(8px,2.5vw,16px) }
+  }
+</style>
+<script>
+(function(){
+  /* הספר הופך לווידאו, אותו ריבוע כחול ואותו עיצוב */
+  var p=document.querySelector('.p1 .pad');
+  if(p) p.innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
+      '<rect x="2.4" y="5" width="19.2" height="14" rx="3.2" fill="#fff"/>'+
+      '<path d="M10.2 9.6v4.8l4.3-2.4z" fill="#3B6BB2"/>'+
+    '</svg>';
+  var w=document.querySelector('.pad-wrap.p1');
+  if(w) w.dataset.soon='כאן ייפתח הסיפור של המשפחה';
+})();
+</script>
 </body>
 </html>
