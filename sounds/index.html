@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>סאונדים לבחירה</title>
+<style>
+  :root{ --purple:#43225A; --orange:#F2A412; --blue:#3B6BB2; --red:#CC3717; --turq:#189E8A; }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:#2d1740; color:#fff; min-height:100vh;
+    font-family:system-ui,"Segoe UI",Arial,sans-serif;
+    padding:22px max(18px,env(safe-area-inset-right,0px)) 44px max(18px,env(safe-area-inset-left,0px));
+    -webkit-tap-highlight-color:transparent;
+  }
+  .wrap{max-width:540px; margin:0 auto}
+  h1{margin:0 0 20px; font-size:21px; font-weight:800}
+  h2{
+    margin:30px 0 4px; font-size:16px; font-weight:800; color:var(--orange);
+    display:flex; align-items:center; gap:9px;
+  }
+  h2 i{
+    flex:0 0 24px; height:24px; border-radius:8px; background:var(--orange); color:#3a2300;
+    display:grid; place-items:center; font-size:13px; font-weight:800; font-style:normal;
+  }
+  .sub{margin:0 0 16px; font-size:13.5px; line-height:1.65; opacity:.78}
+  .row{
+    display:flex; align-items:center; gap:13px; width:100%;
+    border:none; border-radius:17px; cursor:pointer; text-align:right;
+    background:rgba(255,255,255,.07); color:#fff;
+    padding:13px 15px; margin-bottom:11px;
+    font-family:inherit; font-size:16.5px; font-weight:700;
+    transition:background .15s, transform .08s, box-shadow .15s;
+  }
+  .row:active{transform:scale(.985)}
+  .row.on{background:rgba(255,255,255,.18); box-shadow:inset 0 0 0 2px var(--orange)}
+  .ico{flex:0 0 44px; height:44px; border-radius:13px; display:grid; place-items:center}
+  .ico svg{width:25px; height:25px; display:block}
+  .txt{flex:1; min-width:0}
+  .txt small{display:block; font-size:12.5px; font-weight:600; opacity:.72; margin-top:3px; line-height:1.5}
+  .ref{opacity:.55}
+  .ref .ico{background:rgba(255,255,255,.12)}
+
+  .mix{
+    display:flex; align-items:center; gap:12px; cursor:pointer;
+    background:rgba(242,164,18,.14); border:none; width:100%; text-align:right;
+    border-radius:17px; padding:13px 15px; margin:0 0 14px;
+    color:#fff; font-family:inherit; font-size:15.5px; font-weight:700;
+  }
+  .sw{
+    flex:0 0 52px; height:30px; border-radius:999px; background:rgba(255,255,255,.22);
+    position:relative; transition:background .18s;
+  }
+  .sw::after{
+    content:""; position:absolute; top:3px; right:3px; width:24px; height:24px;
+    border-radius:50%; background:#fff; transition:transform .18s;
+  }
+  .mix.on .sw{background:var(--orange)}
+  .mix.on .sw::after{transform:translateX(-22px)}
+
+  .foot{
+    margin-top:26px; padding:15px; border-radius:16px;
+    background:rgba(255,255,255,.06); font-size:13.5px; line-height:1.75;
+  }
+  .foot b{color:var(--orange)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>סאונדים לבחירה</h1>
+
+  <h2><i>1</i> סיבוב הקלף</h2>
+  <p class="sub">נשמע בכל נגיעה בקלף, בערך ארבעים פעם במשחק אחד. כולם מכוילים לאותה עוצמה, כדי שההשוואה לא תהיה תלויה במי רועש יותר.</p>
+
+  <button class="row" data-s="tok">
+    <span class="ico" style="background:var(--orange)">
+      <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="9" width="18" height="6" rx="3" fill="#3a2300"/><path d="M12 4v3M8.5 5.2l1 2.4M15.5 5.2l-1 2.4" stroke="#3a2300" stroke-width="2" stroke-linecap="round"/></svg>
+    </span>
+    <span class="txt">נקישת עץ<small>חמה ונמוכה, כמו קלף עבה שנוגע בשולחן</small></span>
+  </button>
+
+  <button class="row" data-s="click">
+    <span class="ico" style="background:var(--blue)">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v5M12 16v5M3 12h5M16 12h5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="12" r="2.6" fill="#fff"/></svg>
+    </span>
+    <span class="txt">נקישה חדה<small>יבשה וקצרה מאוד, כמעט בלתי מורגשת</small></span>
+  </button>
+
+  <button class="row" data-s="pop">
+    <span class="ico" style="background:var(--turq)">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13" r="6.4" fill="#fff"/><circle cx="9.8" cy="10.8" r="1.7" fill="#189E8A"/></svg>
+    </span>
+    <span class="txt">פופ עגול<small>צליל רך שצולל למטה</small></span>
+  </button>
+
+  <button class="row" data-s="sparkle">
+    <span class="ico" style="background:var(--red)">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2.6l1.9 5.1 5.1 1.9-5.1 1.9L12 16.6l-1.9-5.1L5 9.6l5.1-1.9z" fill="#fff"/><circle cx="18.6" cy="17.4" r="1.9" fill="#fff"/></svg>
+    </span>
+    <span class="txt">נצנוץ פעמון<small>מוזיקלי. עלול להתנגש עם צלילי הדמויות</small></span>
+  </button>
+
+  <button class="row ref" data-s="woosh">
+    <span class="ico">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3 8h13M3 12h17M3 16h10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+    </span>
+    <span class="txt">הווש שלא אהבת<small>כאן רק לשם השוואה</small></span>
+  </button>
+
+  <h2><i>2</i> הצלחה, שני קלפים זהים</h2>
+  <p class="sub">נשמע פעם אחת לכל זוג, שבע פעמים במשחק. הדליקי את המתג כדי לשמוע אותו יחד עם צליל של דמות, כמו שזה יישמע באמת. בכל לחיצה תקבלי דמות אחרת.</p>
+
+  <button class="mix" id="mix">
+    <span class="sw"></span>
+    <span>לשמוע יחד עם צליל התו</span>
+  </button>
+
+  <button class="row" data-s="win_bells" data-win="1">
+    <span class="ico" style="background:var(--orange)">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.4a5.6 5.6 0 0 1 5.6 5.6v4.2l1.6 2.6H4.8l1.6-2.6V9A5.6 5.6 0 0 1 12 3.4z" fill="#3a2300"/><path d="M9.8 18.4a2.3 2.3 0 0 0 4.4 0" stroke="#3a2300" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+    </span>
+    <span class="txt">שלושה פעמונים עולים<small>דו, מי, סול. מתוק וקלאסי</small></span>
+  </button>
+
+  <button class="row" data-s="win_shimmer" data-win="1">
+    <span class="ico" style="background:var(--turq)">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M8 2.8l1.3 3.5 3.5 1.3-3.5 1.3L8 12.4 6.7 8.9 3.2 7.6l3.5-1.3z" fill="#fff"/><path d="M16.4 11.6l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z" fill="#fff"/></svg>
+    </span>
+    <span class="txt">נצנוץ קסום<small>לא מוזיקלי, ולכן לא יכול להתנגש עם שום תו</small></span>
+  </button>
+
+  <button class="row" data-s="win_tada" data-win="1">
+    <span class="ico" style="background:var(--red)">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4.6 19.4l5.2-12 9.6 4.2z" fill="#fff"/><path d="M14.4 4.2l1.2 2M18.8 6.4l-1.6 1.6M20.6 11.2l-2.2.2" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+    </span>
+    <span class="txt">טה-דה<small>סול ואז דו. חגיגי ובולט</small></span>
+  </button>
+
+  <div class="foot">
+    אפשר גם <b>בלי סאונד בסיבוב</b>, ורק סאונד הצלחה. תגידי לי מה בחרת לכל אחד מהשניים ואחבר.
+  </div>
+</div>
+
+<audio id="pa" preload="none" playsinline></audio>
+<audio id="pb" preload="none" playsinline></audio>
+<script>
+(function(){
+  var NOTES=['c4','d4','e4','f4','g4','a4','b4'];
+  var BASE='https://hanibarsol.github.io/sol-virtualpiano/sound3/';
+  var pa=document.getElementById('pa'), pb=document.getElementById('pb'),
+      mix=document.getElementById('mix'), cur=null, together=false, ni=0;
+
+  function go(el,src){
+    try{
+      el.pause(); el.currentTime=0; el.src=src;
+      var q=el.play(); if(q&&q.catch) q.catch(function(){});
+    }catch(e){}
+  }
+
+  mix.addEventListener('click',function(){
+    together=!together;
+    mix.classList.toggle('on',together);
+  });
+
+  document.querySelectorAll('.row').forEach(function(b){
+    b.addEventListener('click',function(){
+      if(cur) cur.classList.remove('on');
+      cur=b; b.classList.add('on');
+      go(pa,'snd/'+b.dataset.s+'.mp3');
+      if(together && b.dataset.win){
+        go(pb, BASE+NOTES[ni%NOTES.length]+'.mp3');
+        ni++;
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

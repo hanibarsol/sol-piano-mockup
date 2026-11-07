@@ -145,13 +145,16 @@
   }
   function note(n){ play(BASE+'sound3/'+n+'.mp3'); }
   function shuffleSound(){ play('snd/shuffle.mp3'); }
-  /* ווש הסיבוב. פעם אחת לכל תנועה, כדי ששני קלפים שנסגרים יחד לא יישמעו כפול */
+  /* סאונד הסיבוב ממתין לבחירה של חני. הווש נדחה ב-2026-11-07.
+     הנעילה הזאת נשארת כאן כדי ששני קלפים שנסגרים יחד לא יישמעו כפול. */
+  var FLIP=null;
   var lastFlip=0;
   function flipSound(){
+    if(!FLIP) return;
     var t=Date.now();
     if(t-lastFlip<90) return;
     lastFlip=t;
-    play('snd/flip.mp3');
+    play('snd/'+FLIP);
   }
 
   /* ערבוב פישר-ייטס, ולעולם לא אותה פריסה כמו במשחק הקודם */
@@ -270,8 +273,8 @@
   }
 
   function finish(){
-    CAST.forEach(function(c,i){ setTimeout(function(){ note(c.note); }, 650+i*520); });
-    setTimeout(function(){ again.classList.add('show'); }, 650+CAST.length*520);
+    /* בלי ניגון כל התווים בסוף, לבקשת חני ב-2026-11-07: "זה נשמע רע" */
+    setTimeout(function(){ again.classList.add('show'); }, 750);
   }
 
   function newGame(){ build(); requestAnimationFrame(function(){ dealOut(); }); }
