@@ -81,8 +81,20 @@
   .card.up .front{ opacity:1 }
 
   .card.done .front{ box-shadow:0 0 0 3px var(--orange), 0 3px 0 rgba(0,0,0,.25) }
-  .card.pop .front{ animation:pop .42s ease }
-  @keyframes pop{ 50%{ transform:scale(1.09) } }
+
+  /* הדמות קופצת החוצה מהקלף וחוזרת. overflow:visible הוא מה שמאפשר לה לצאת. */
+  .card.jump{ z-index:30 }
+  .card.jump .front{ overflow:visible }
+  .card.jump .front img{ animation:jump .92s cubic-bezier(.34,.9,.4,1) }
+  /* --jx/--jy נקבעים בקוד לכל קלף, כדי שדמות בקצה הלוח לא תיחתך במסך */
+  @keyframes jump{
+    0%   { transform:translate(0,0) scale(1) rotate(0deg) }
+    26%  { transform:translate(var(--jx,0px), calc(-11% + var(--jy,0px))) scale(1.50) rotate(-7deg) }
+    44%  { transform:translate(var(--jx,0px), calc(-14% + var(--jy,0px))) scale(1.56) rotate(6deg) }
+    62%  { transform:translate(var(--jx,0px), calc(-10% + var(--jy,0px))) scale(1.50) rotate(-4deg) }
+    82%  { transform:translate(calc(var(--jx,0px)*.3), calc(-2% + var(--jy,0px)*.3)) scale(1.12) rotate(2deg) }
+    100% { transform:translate(0,0) scale(1) rotate(0deg) }
+  }
 
   /* ---------- סיום ---------- */
   #again{
@@ -96,7 +108,7 @@
   #again.show{ opacity:1; transform:translateX(-50%) scale(1); pointer-events:auto }
 
   @media (prefers-reduced-motion:reduce){
-    .inner.flip{animation:none} .card.pop .front{animation:none}
+    .inner.flip{animation:none} .card.jump .front img{animation:none}
     .card.dealing{transition:none} #again{transition:none}
   }
 </style>
@@ -182,6 +194,24 @@
     '</svg>';
   }
 
+  /* מחשב כמה למשוך את הקפיצה פנימה, כדי שהדמות תישאר בתוך המסך */
+  var PEAK=1.56, RISE=.14, SAFE=1.10, EDGE=6;
+  function aimJump(card){
+    var img=card.querySelector('.front img');
+    if(!img) return;
+    var r=img.getBoundingClientRect();
+    if(!r.width||!r.height){ card.style.setProperty('--jx','0px'); card.style.setProperty('--jy','0px'); return; }
+    var hw=r.width*PEAK/2*SAFE, hh=r.height*PEAK/2*SAFE;
+    var cx=r.left+r.width/2, cy=r.top+r.height/2-r.height*RISE;
+    var vw=window.innerWidth, vh=window.innerHeight, dx=0, dy=0;
+    if(cx-hw<EDGE)      dx=EDGE-(cx-hw);
+    if(cx+hw>vw-EDGE)   dx=(vw-EDGE)-(cx+hw);
+    if(cy-hh<EDGE)      dy=EDGE-(cy-hh);
+    else if(cy+hh>vh-EDGE) dy=(vh-EDGE)-(cy+hh);
+    card.style.setProperty('--jx', Math.round(dx)+'px');
+    card.style.setProperty('--jy', Math.round(dy)+'px');
+  }
+
   function turn(card,up){
     flipSound();
     var inner=card.querySelector('.inner');
@@ -262,8 +292,9 @@
       var a=first,b=card; first=null;
       setTimeout(function(){
         matchSound(b.dataset.note);
-        a.classList.add('done','pop'); b.classList.add('done','pop');
-        setTimeout(function(){ a.classList.remove('pop'); b.classList.remove('pop'); },430);
+        aimJump(a); aimJump(b);
+        a.classList.add('done','jump'); b.classList.add('done','jump');
+        setTimeout(function(){ a.classList.remove('jump'); b.classList.remove('jump'); },940);
         found++; lock=false;
         if(found===CAST.length) finish();
       },180);
@@ -276,7 +307,7 @@
 
   function finish(){
     /* בלי ניגון כל התווים בסוף, לבקשת חני ב-2026-11-07: "זה נשמע רע" */
-    setTimeout(function(){ again.classList.add('show'); }, 750);
+    setTimeout(function(){ again.classList.add('show'); }, 1100);
   }
 
   function newGame(){ build(); requestAnimationFrame(function(){ dealOut(); }); }
