@@ -65,11 +65,10 @@
     display:flex; align-items:center; justify-content:center; overflow:hidden;
   }
   .back{
-    background:
-      radial-gradient(120% 90% at 50% 12%, #6b3a8f 0%, #4a2765 48%, #35184d 100%);
-    box-shadow:inset 0 2px 0 rgba(255,255,255,.22), 0 3px 0 rgba(0,0,0,.3);
+    background:linear-gradient(160deg,#2FC3AC,var(--turq));
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.35), 0 3px 0 rgba(0,0,0,.25);
   }
-  .back svg{width:84%; height:84%; display:block}
+  .back svg{width:52%; height:52%; display:block}
   .front{
     background:var(--card); box-shadow:0 3px 0 rgba(0,0,0,.25); padding:6%;
   }
@@ -162,20 +161,11 @@
     return deck;
   }
 
-  /* גב הקלף: קשת של שבעת צבעי התווים, ותו לבן במרכז */
   function backSvg(){
-    var dots='';
-    for(var i=0;i<7;i++){
-      var a=Math.PI*(0.14+0.72*(i/6));          /* קשת עדינה */
-      var x=50-36*Math.cos(a), y=74-15*Math.sin(a);
-      dots+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="4.1" fill="'+DOTS[i]+'"/>';
-    }
-    return '<svg viewBox="0 0 100 100" fill="none" aria-hidden="true">'+
-      '<circle cx="50" cy="40" r="27" fill="rgba(255,255,255,.07)"/>'+
-      '<circle cx="39" cy="47" r="8.6" fill="#fff"/>'+
-      '<path d="M47.6 47V17.2l17-4V38" stroke="#fff" stroke-width="5.2" stroke-linecap="round" fill="none"/>'+
-      '<circle cx="57.4" cy="38" r="8.6" fill="#fff"/>'+
-      dots+
+    return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
+      '<circle cx="9" cy="17" r="3.4" fill="#fff"/>'+
+      '<path d="M12.4 17V5.2l7-1.6V14" stroke="#fff" stroke-width="2.1" stroke-linecap="round" fill="none"/>'+
+      '<circle cx="16" cy="14" r="3.4" fill="#fff"/>'+
     '</svg>';
   }
 
