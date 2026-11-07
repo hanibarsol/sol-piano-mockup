@@ -143,11 +143,13 @@
       var p=player.play(); if(p&&p.catch) p.catch(function(){});
     }catch(e){}
   }
-  function note(n){ play(BASE+'sound3/'+n+'.mp3'); }
+  /* הצלחה: שלושת הפעמונים וצליל הדמות מעורבבים מראש לקובץ אחד.
+     ככה הם נשמעים בו זמנית בכל מכשיר, בלי נגן שני שאייפון עלול לחסום. */
+  function matchSound(n){ play('snd/match/'+n+'.mp3'); }
   function shuffleSound(){ play('snd/shuffle.mp3'); }
-  /* סאונד הסיבוב ממתין לבחירה של חני. הווש נדחה ב-2026-11-07.
+  /* נקישת עץ, בחירת חני ב-2026-11-07 (הווש נדחה).
      הנעילה הזאת נשארת כאן כדי ששני קלפים שנסגרים יחד לא יישמעו כפול. */
-  var FLIP=null;
+  var FLIP='tok.mp3';
   var lastFlip=0;
   function flipSound(){
     if(!FLIP) return;
@@ -259,7 +261,7 @@
       lock=true;
       var a=first,b=card; first=null;
       setTimeout(function(){
-        note(b.dataset.note);
+        matchSound(b.dataset.note);
         a.classList.add('done','pop'); b.classList.add('done','pop');
         setTimeout(function(){ a.classList.remove('pop'); b.classList.remove('pop'); },430);
         found++; lock=false;
