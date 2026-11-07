@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>משחק הזיכרון של המשפחה</title>
+<style>
+  :root{
+    --purple:#43225A; --orange:#F2A412; --blue:#3B6BB2;
+    --turq:#189E8A; --nav:#17A79B; --red:#CC3717;
+    --card:#ffffff; --ink:#2b2b31;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--purple); color:#fff; overflow:hidden;
+    font-family:system-ui,"Segoe UI",Arial,sans-serif;
+    user-select:none; -webkit-user-select:none;
+    touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+  }
+
+  /* ---------- מסך פתיחה ---------- */
+  #start{
+    position:fixed; inset:0; z-index:100; background:var(--purple);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:18px; text-align:center;
+    padding-left:max(16px,env(safe-area-inset-left,0px));
+    padding-right:max(16px,env(safe-area-inset-right,0px));
+  }
+  #start[hidden]{display:none !important}
+  #start h1{margin:0; font-size:clamp(19px,5.5dvh,30px); font-weight:800; line-height:1.5}
+  #start p{margin:0; font-size:clamp(13px,3dvh,16px); font-weight:600; opacity:.85}
+  #go{
+    border:none; border-radius:999px; background:var(--turq); color:#fff; cursor:pointer;
+    padding:clamp(11px,2.4dvh,16px) clamp(26px,7vw,46px);
+    font-size:clamp(15px,3.4dvh,20px); font-weight:800;
+    box-shadow:0 4px 0 rgba(0,0,0,.28);
+  }
+  #go:active{transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.28)}
+
+  /* ---------- הלוח ---------- */
+  #board{
+    height:100%;
+    display:grid; gap:clamp(5px,1.4vmin,12px);
+    grid-template-columns:repeat(7,1fr); grid-template-rows:repeat(2,1fr);
+    padding:clamp(6px,1.6vmin,14px);
+    padding-left:max(clamp(6px,1.6vmin,14px),env(safe-area-inset-left,0px));
+    padding-right:max(clamp(6px,1.6vmin,14px),env(safe-area-inset-right,0px));
+  }
+  @media (orientation:portrait){
+    #board{grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(4,1fr)}
+  }
+
+  .card{ cursor:pointer; min-width:0; min-height:0 }
+  .inner{ position:relative; width:100%; height:100% }
+  /* היפוך דו ממדי: הקלף מצטמצם לקו ונפתח בחזרה, והפנים מתחלפים באמצע. */
+  .inner.flip{ animation:flip .42s cubic-bezier(.4,.1,.4,1) }
+  @keyframes flip{ 0%{transform:scaleX(1)} 50%{transform:scaleX(.04)} 100%{transform:scaleX(1)} }
+  .face{
+    position:absolute; inset:0;
+    border-radius:clamp(8px,1.8vmin,16px);
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+  }
+  .back{
+    background:linear-gradient(160deg,#2FC3AC,var(--turq));
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.35), 0 3px 0 rgba(0,0,0,.25);
+  }
+  .back svg{width:52%; height:52%; display:block}
+  .front{
+    background:var(--card);
+    box-shadow:0 3px 0 rgba(0,0,0,.25);
+    padding:6%;
+  }
+  .front img{max-width:100%; max-height:100%; object-fit:contain; pointer-events:none}
+
+  /* גיבוי: גם אם הדפדפן לא מכבד את הסתרת הצד האחורי,
+     הפנים והגב מתחלפים באמצע ההיפוך ולא נראים יחד. */
+  .back, .front{ transition:opacity 0s linear .21s }
+  .back{ opacity:1 }
+  .front{ opacity:0 }
+  .card.up .back{ opacity:0 }
+  .card.up .front{ opacity:1 }
+
+  .card.done .front{
+    box-shadow:0 0 0 3px var(--orange), 0 3px 0 rgba(0,0,0,.25);
+  }
+  .card.pop .front{ animation:pop .42s ease }
+  @keyframes pop{ 50%{ transform:scale(1.09) } }
+
+  /* ---------- סיום ---------- */
+  #again{
+    position:fixed; z-index:60; left:50%; bottom:max(12px,env(safe-area-inset-bottom,0px));
+    transform:translateX(-50%) scale(.6); opacity:0; pointer-events:none;
+    border:none; border-radius:999px; background:var(--orange); color:#3a2300;
+    padding:clamp(9px,2dvh,14px) clamp(20px,6vw,34px);
+    font-size:clamp(14px,3dvh,18px); font-weight:800; cursor:pointer;
+    box-shadow:0 4px 0 rgba(0,0,0,.28); transition:opacity .3s, transform .3s;
+  }
+  #again.show{ opacity:1; transform:translateX(-50%) scale(1); pointer-events:auto }
+
+  @media (prefers-reduced-motion:reduce){
+    .inner.flip{animation:none} .card.pop .front{animation:none} #again{transition:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="board" aria-label="משחק הזיכרון"></div>
+<button id="again">עוד פעם</button>
+
+<div id="start">
+  <h1>משחק הזיכרון<br>של המשפחה של סול</h1>
+  <p>מצאו את הזוגות. כל זוג משמיע את הצליל שלו.</p>
+  <button id="go">אפשר להתחיל</button>
+</div>
+
+<audio id="player" preload="none" playsinline></audio>
+
+<script>
+(function(){
+  var BASE = 'https://hanibarsol.github.io/sol-virtualpiano/';
+  /* שבע דמויות, כל אחת והצליל שלה. הדלת היא סי. */
+  var CAST = [
+    {id:'do',  img:'%D7%93%D7%95.png',             note:'c4', name:'דו'},
+    {id:'re',  img:'%D7%A8%D7%94.png',             note:'d4', name:'רה'},
+    {id:'mi',  img:'%D7%9E%D7%99.png',             note:'e4', name:'מי'},
+    {id:'fa',  img:'%D7%A4%D7%94.png',             note:'f4', name:'פה'},
+    {id:'sol', img:'%D7%A1%D7%95%D7%9C.png',       note:'g4', name:'סול'},
+    {id:'la',  img:'%D7%9C%D7%94.png',             note:'a4', name:'לה'},
+    {id:'si',  img:'%D7%A1%D7%99.png',             note:'b4', name:'סי'}
+  ];
+
+  var board   = document.getElementById('board'),
+      startEl = document.getElementById('start'),
+      goBtn   = document.getElementById('go'),
+      again   = document.getElementById('again'),
+      player  = document.getElementById('player');   /* נגן אחד משותף */
+
+  var first=null, lock=false, found=0;
+
+  function turn(card, up){
+    var inner = card.querySelector('.inner');
+    inner.classList.remove('flip');
+    void inner.offsetWidth;          /* מאלץ התחלה מחדש של האנימציה */
+    inner.classList.add('flip');
+    if(up) card.classList.add('up'); else card.classList.remove('up');
+  }
+
+  function play(note){
+    try{
+      player.pause();
+      player.currentTime = 0;
+      player.src = BASE + 'sound3/' + note + '.mp3';
+      var p = player.play();
+      if(p && p.catch) p.catch(function(){});
+    }catch(e){}
+  }
+
+  function shuffle(a){
+    for(var i=a.length-1;i>0;i--){
+      var j=Math.floor(Math.random()*(i+1));
+      var t=a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  function backSvg(){
+    return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">'+
+      '<circle cx="9" cy="17" r="3.4" fill="#fff"/>'+
+      '<path d="M12.4 17V5.2l7-1.6V14" stroke="#fff" stroke-width="2.1" stroke-linecap="round" fill="none"/>'+
+      '<circle cx="16" cy="14" r="3.4" fill="#fff"/>'+
+    '</svg>';
+  }
+
+  function build(){
+    board.innerHTML='';
+    first=null; lock=false; found=0;
+    again.classList.remove('show');
+
+    var deck = shuffle(CAST.concat(CAST).slice());
+    deck.forEach(function(c,i){
+      var card=document.createElement('div');
+      card.className='card';
+      card.dataset.id=c.id;
+      card.dataset.note=c.note;
+      card.setAttribute('role','button');
+      card.setAttribute('aria-label','קלף '+(i+1));
+      card.innerHTML =
+        '<div class="inner">'+
+          '<div class="face back">'+backSvg()+'</div>'+
+          '<div class="face front"><img src="'+BASE+c.img+'" alt="'+c.name+'"></div>'+
+        '</div>';
+      card.addEventListener('click',function(){ pick(card); });
+      board.appendChild(card);
+    });
+  }
+
+  function pick(card){
+    if(lock) return;
+    if(card.classList.contains('up')) return;
+    if(card.classList.contains('done')) return;
+
+    turn(card,true);
+
+    if(!first){ first=card; return; }
+
+    if(first.dataset.id === card.dataset.id){
+      /* זוג. הדמות משמיעה את הצליל שלה. */
+      lock=true;
+      var a=first, b=card; first=null;
+      setTimeout(function(){
+        play(b.dataset.note);
+        a.classList.add('done','pop');
+        b.classList.add('done','pop');
+        setTimeout(function(){ a.classList.remove('pop'); b.classList.remove('pop'); },430);
+        found++;
+        lock=false;
+        if(found===CAST.length) finish();
+      },180);
+    }else{
+      /* לא תאם. נסגרים בשקט, בלי צליל שלילי. */
+      lock=true;
+      var x=first, y=card; first=null;
+      setTimeout(function(){
+        turn(x,false); turn(y,false); lock=false;
+      },900);
+    }
+  }
+
+  function finish(){
+    /* כל המשפחה מנגנת בזה אחר זה */
+    CAST.forEach(function(c,i){
+      setTimeout(function(){ play(c.note); }, 650 + i*520);
+    });
+    setTimeout(function(){ again.classList.add('show'); }, 650 + CAST.length*520);
+  }
+
+  goBtn.addEventListener('click', function(){
+    startEl.hidden = true;
+    play('c4');          /* פותח את השמע בתוך המחווה */
+  });
+  again.addEventListener('click', build);
+
+  build();
+})();
+</script>
+</body>
+</html>
