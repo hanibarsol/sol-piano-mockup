@@ -597,10 +597,18 @@ window.initTouchControls = function(){
       if(kind==='video'){ frame.src='about:blank'; kind=null; }
     },{passive:false});
   });
-  /* המשחק מסמן את עצמו, כדי שהסגירה תדע להשאיר אותו */
+  /* הכרית הכתומה: משחק הזיכרון. נשאר טעון כדי לא לאבד התקדמות */
+  var GAME='memory/';
   var padGame=document.querySelector('.pad-wrap.p2');
+  function openGame(e){
+    e.preventDefault(); e.stopPropagation();
+    kind='game';
+    frame.title='מי מסתתר כאן?';
+    if(frame.src.indexOf(GAME)<0) frame.src=GAME;
+    box.classList.add('open');
+  }
   if(padGame) ['touchstart','mousedown'].forEach(function(ev){
-    padGame.addEventListener(ev,function(){ kind='game'; },{passive:false});
+    padGame.addEventListener(ev,openGame,{passive:false});
   });
 })();
 </script>
