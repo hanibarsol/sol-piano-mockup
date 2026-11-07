@@ -145,6 +145,14 @@
   }
   function note(n){ play(BASE+'sound3/'+n+'.mp3'); }
   function shuffleSound(){ play('snd/shuffle.mp3'); }
+  /* ווש הסיבוב. פעם אחת לכל תנועה, כדי ששני קלפים שנסגרים יחד לא יישמעו כפול */
+  var lastFlip=0;
+  function flipSound(){
+    var t=Date.now();
+    if(t-lastFlip<90) return;
+    lastFlip=t;
+    play('snd/flip.mp3');
+  }
 
   /* ערבוב פישר-ייטס, ולעולם לא אותה פריסה כמו במשחק הקודם */
   function shuffled(){
@@ -170,6 +178,7 @@
   }
 
   function turn(card,up){
+    flipSound();
     var inner=card.querySelector('.inner');
     inner.classList.remove('flip'); void inner.offsetWidth; inner.classList.add('flip');
     if(up) card.classList.add('up'); else card.classList.remove('up');
