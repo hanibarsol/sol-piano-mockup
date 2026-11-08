@@ -10,7 +10,7 @@
     /* צבעי התווים הקבועים של סול */
     --c-do:#ff6b6b; --c-re:#ffa35c; --c-mi:#f2cf52; --c-fa:#5fcb82;
     --c-sol:#5cacea; --c-la:#9c86ea; --c-si:#e37bcb;
-    --card:#ffffff;
+    --card:#f7f7f7;   /* זהה לרקע ההנפשות, אחרת נראה ריבוע אפרפר בתוך הקלף */
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -74,6 +74,16 @@
   }
   .front img{max-width:100%; max-height:100%; object-fit:contain; pointer-events:none}
 
+  /* ההנפשה יושבת בדיוק על התמונה ומתחלפת איתה במעבר רך */
+  .front .clip{
+    position:absolute; inset:6%; object-fit:contain;
+    opacity:0; pointer-events:none; background:transparent;
+    transition:opacity .18s linear;
+  }
+  .front img{ transition:opacity .18s linear }
+  .card.playing .front .clip{ opacity:1 }
+  .card.playing .front img{ opacity:0 }
+
   .back, .front{ transition:opacity 0s linear .21s }
   .back{ opacity:1 }
   .front{ opacity:0 }
@@ -130,13 +140,13 @@
 (function(){
   var BASE='https://hanibarsol.github.io/sol-virtualpiano/';
   var CAST=[
-    {id:'do',  img:'%D7%93%D7%95.png',       note:'c4', col:'--c-do'},
-    {id:'re',  img:'%D7%A8%D7%94.png',       note:'d4', col:'--c-re'},
-    {id:'mi',  img:'%D7%9E%D7%99.png',       note:'e4', col:'--c-mi'},
-    {id:'fa',  img:'%D7%A4%D7%94.png',       note:'f4', col:'--c-fa'},
-    {id:'sol', img:'%D7%A1%D7%95%D7%9C.png', note:'g4', col:'--c-sol'},
-    {id:'la',  img:'%D7%9C%D7%94.png',       note:'a4', col:'--c-la'},
-    {id:'si',  img:'%D7%A1%D7%99.png',       note:'b4', col:'--c-si'}
+    {id:'do',  img:'%D7%93%D7%95.png',       note:'c4', col:'--c-do', anim:1},
+    {id:'re',  img:'%D7%A8%D7%94.png',       note:'d4', col:'--c-re', anim:1},
+    {id:'mi',  img:'%D7%9E%D7%99.png',       note:'e4', col:'--c-mi', anim:1},
+    {id:'fa',  img:'%D7%A4%D7%94.png',       note:'f4', col:'--c-fa',  anim:1},
+    {id:'sol', img:'%D7%A1%D7%95%D7%9C.png', note:'g4', col:'--c-sol', anim:1},
+    {id:'la',  img:'%D7%9C%D7%94.png',       note:'a4', col:'--c-la',  anim:1},
+    {id:'si',  img:'%D7%A1%D7%99.png',       note:'b4', col:'--c-si',  anim:1}
   ];
   var DOTS=['#ff6b6b','#ffa35c','#f2cf52','#5fcb82','#5cacea','#9c86ea','#e37bcb'];
 
@@ -229,9 +239,15 @@
       card.className='card';
       card.dataset.id=c.id; card.dataset.note=c.note;
       card.setAttribute('role','button');
+      /* לדמות עם הנפשה, תמונת הקלף היא הפריים הראשון של ההנפשה עצמה,
+         ולכן המעבר ביניהן לא קופץ */
+      var face = c.anim
+        ? '<img src="anim/'+c.note+'.jpg" alt="">'+
+          '<video class="clip" src="anim/'+c.note+'.mp4" muted playsinline preload="auto"></video>'
+        : '<img src="'+BASE+c.img+'" alt="">';
       card.innerHTML='<div class="inner">'+
           '<div class="face back">'+backSvg()+'</div>'+
-          '<div class="face front"><img src="'+BASE+c.img+'" alt=""></div>'+
+          '<div class="face front">'+face+'</div>'+
         '</div>';
       card.addEventListener('click',function(){ pick(card); });
       board.appendChild(card);
@@ -280,6 +296,36 @@
     },230);
   }
 
+  function jumpOnly(card){
+    aimJump(card);
+    card.classList.add('jump');
+    setTimeout(function(){ card.classList.remove('jump'); },940);
+  }
+
+  /* דמות עם הנפשה מנגנת אותה, ודמות בלי הנפשה קופצת.
+     התמונה נעלמת רק כשההנפשה באמת מתנגנת. אם היא לא יוצאת לדרך תוך שליש שנייה,
+     הקלף קופץ במקום, כדי שלעולם לא יישאר קלף ריק. */
+  function celebrate(card){
+    var v=card.querySelector('video.clip');
+    if(!v){ jumpOnly(card); return; }
+    var decided=false, timer;
+    function start(){
+      if(decided) return;
+      decided=true; clearTimeout(timer);
+      card.classList.add('playing');
+      setTimeout(function(){ card.classList.remove('playing'); },1200);
+    }
+    v.addEventListener('playing', start, {once:true});
+    timer=setTimeout(function(){
+      if(decided) return;
+      decided=true;
+      v.removeEventListener('playing', start);
+      try{ v.pause(); }catch(e){}
+      jumpOnly(card);
+    },300);
+    try{ v.muted=true; v.currentTime=0; var q=v.play(); if(q&&q.catch) q.catch(function(){}); }catch(e){}
+  }
+
   function pick(card){
     if(lock) return;
     if(card.classList.contains('up')||card.classList.contains('done')) return;
@@ -292,9 +338,8 @@
       var a=first,b=card; first=null;
       setTimeout(function(){
         matchSound(b.dataset.note);
-        aimJump(a); aimJump(b);
-        a.classList.add('done','jump'); b.classList.add('done','jump');
-        setTimeout(function(){ a.classList.remove('jump'); b.classList.remove('jump'); },940);
+        a.classList.add('done'); b.classList.add('done');
+        celebrate(a); celebrate(b);
         found++; lock=false;
         if(found===CAST.length) finish();
       },180);
@@ -307,7 +352,7 @@
 
   function finish(){
     /* בלי ניגון כל התווים בסוף, לבקשת חני ב-2026-11-07: "זה נשמע רע" */
-    setTimeout(function(){ again.classList.add('show'); }, 1100);
+    setTimeout(function(){ again.classList.add('show'); }, 1450);
   }
 
   function newGame(){ build(); requestAnimationFrame(function(){ dealOut(); }); }
