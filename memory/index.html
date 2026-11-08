@@ -76,7 +76,9 @@
 
   /* ההנפשה יושבת בדיוק על התמונה ומתחלפת איתה במעבר רך */
   .front .clip{
-    position:absolute; inset:6%; object-fit:contain;
+    position:absolute; left:6%; top:6%;
+    width:88%; height:88%;          /* חובה. בלי רוחב וגובה הווידאו מתעלם מ-inset */
+    object-fit:contain;
     opacity:0; pointer-events:none; background:transparent;
     transition:opacity .18s linear;
   }
@@ -93,17 +95,12 @@
   .card.done .front{ box-shadow:0 0 0 3px var(--orange), 0 3px 0 rgba(0,0,0,.25) }
 
   /* הדמות קופצת החוצה מהקלף וחוזרת. overflow:visible הוא מה שמאפשר לה לצאת. */
-  .card.jump{ z-index:30 }
-  .card.jump .front{ overflow:visible }
-  .card.jump .front img{ animation:jump .92s cubic-bezier(.34,.9,.4,1) }
-  /* --jx/--jy נקבעים בקוד לכל קלף, כדי שדמות בקצה הלוח לא תיחתך במסך */
+  /* נפילה לאחור כשההנפשה לא יוצאת לדרך: פעימה עדינה וישרה, הדמות נשארת זקופה */
+  .card.jump .front img{ animation:jump .6s ease }
   @keyframes jump{
-    0%   { transform:translate(0,0) scale(1) rotate(0deg) }
-    26%  { transform:translate(var(--jx,0px), calc(-11% + var(--jy,0px))) scale(1.50) rotate(-7deg) }
-    44%  { transform:translate(var(--jx,0px), calc(-14% + var(--jy,0px))) scale(1.56) rotate(6deg) }
-    62%  { transform:translate(var(--jx,0px), calc(-10% + var(--jy,0px))) scale(1.50) rotate(-4deg) }
-    82%  { transform:translate(calc(var(--jx,0px)*.3), calc(-2% + var(--jy,0px)*.3)) scale(1.12) rotate(2deg) }
-    100% { transform:translate(0,0) scale(1) rotate(0deg) }
+    0%   { transform:scale(1) }
+    45%  { transform:scale(1.07) }
+    100% { transform:scale(1) }
   }
 
   /* ---------- סיום ---------- */
@@ -204,24 +201,6 @@
     '</svg>';
   }
 
-  /* מחשב כמה למשוך את הקפיצה פנימה, כדי שהדמות תישאר בתוך המסך */
-  var PEAK=1.56, RISE=.14, SAFE=1.10, EDGE=6;
-  function aimJump(card){
-    var img=card.querySelector('.front img');
-    if(!img) return;
-    var r=img.getBoundingClientRect();
-    if(!r.width||!r.height){ card.style.setProperty('--jx','0px'); card.style.setProperty('--jy','0px'); return; }
-    var hw=r.width*PEAK/2*SAFE, hh=r.height*PEAK/2*SAFE;
-    var cx=r.left+r.width/2, cy=r.top+r.height/2-r.height*RISE;
-    var vw=window.innerWidth, vh=window.innerHeight, dx=0, dy=0;
-    if(cx-hw<EDGE)      dx=EDGE-(cx-hw);
-    if(cx+hw>vw-EDGE)   dx=(vw-EDGE)-(cx+hw);
-    if(cy-hh<EDGE)      dy=EDGE-(cy-hh);
-    else if(cy+hh>vh-EDGE) dy=(vh-EDGE)-(cy+hh);
-    card.style.setProperty('--jx', Math.round(dx)+'px');
-    card.style.setProperty('--jy', Math.round(dy)+'px');
-  }
-
   function turn(card,up){
     flipSound();
     var inner=card.querySelector('.inner');
@@ -297,9 +276,8 @@
   }
 
   function jumpOnly(card){
-    aimJump(card);
     card.classList.add('jump');
-    setTimeout(function(){ card.classList.remove('jump'); },940);
+    setTimeout(function(){ card.classList.remove('jump'); },620);
   }
 
   /* דמות עם הנפשה מנגנת אותה, ודמות בלי הנפשה קופצת.
@@ -322,7 +300,7 @@
       v.removeEventListener('playing', start);
       try{ v.pause(); }catch(e){}
       jumpOnly(card);
-    },300);
+    },600);
     try{ v.muted=true; v.currentTime=0; var q=v.play(); if(q&&q.catch) q.catch(function(){}); }catch(e){}
   }
 
