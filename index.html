@@ -19,7 +19,55 @@
             cursor: pointer; text-align: center; 
         }
 
-        #start-screen h1 { font-size: 24px; line-height: 1.7; margin: 0; padding: 0 24px; }
+        #start-screen h1 {
+            font-size: 24px; line-height: 1.7; margin: 0; padding: 0 24px;
+            position: relative; z-index: 2;
+            text-shadow: 0 2px 14px rgba(0,0,0,.75);
+        }
+
+        /* לאורך הפסנתר פשוט לא נחשף. בלי זה הוא נראה מעוך וכמו תקלה. */
+        @media (orientation: portrait) {
+            #start-screen { display: flex !important; background: #140820; }
+            #piano-scroll-wrapper { visibility: hidden; }
+        }
+
+        /* ---------- בועות הכניסה ---------- */
+        #bubbles {
+            position: absolute; inset: 0; overflow: hidden;
+            z-index: 1; pointer-events: none;
+        }
+        #bubbles i {
+            position: absolute; bottom: -22vmin; display: block;
+            width: var(--d); height: var(--d); border-radius: 50%;
+            background:
+                radial-gradient(circle at 32% 28%, rgba(255,255,255,.92) 0 6%, rgba(255,255,255,.28) 14%, rgba(255,255,255,0) 42%),
+                radial-gradient(circle at 50% 50%, var(--c) 0 58%, rgba(255,255,255,.14) 78%, rgba(255,255,255,.34) 100%);
+            box-shadow: inset 0 0 14px rgba(255,255,255,.35), 0 0 18px var(--c);
+            opacity: 0;
+            animation: rise var(--t) linear var(--delay) infinite;
+        }
+        @keyframes rise {
+            0%   { transform: translate3d(0,0,0) scale(.72);        opacity: 0 }
+            12%  {                                                   opacity: .85 }
+            50%  { transform: translate3d(var(--sway),-58vh,0) scale(1) }
+            88%  {                                                   opacity: .7 }
+            100% { transform: translate3d(0,-118vh,0) scale(1.08);   opacity: 0 }
+        }
+
+        /* בנגיעה הבועות מתפוצצות החוצה */
+        #start-screen.pop #bubbles i {
+            animation: burst .5s cubic-bezier(.2,.8,.3,1) forwards;
+        }
+        @keyframes burst {
+            0%   { opacity: .85 }
+            100% { transform: translate3d(var(--bx),var(--by),0) scale(1.9); opacity: 0 }
+        }
+        #start-screen.pop { transition: opacity .42s ease .12s; opacity: 0 }
+
+        @media (prefers-reduced-motion: reduce) {
+            #bubbles i { animation: none; opacity: .5 }
+            #start-screen.pop #bubbles i { animation: none }
+        }
 
         #piano-scroll-wrapper {
             width: 100vw; height: 100vh; overflow-x: auto; overflow-y: hidden;
@@ -67,7 +115,7 @@
 </head>
 <body>
 
-<div id="start-screen"><h1>סובבו את הטלפון לרוחב<br>וגעו במסך כדי להתחיל 🎹</h1></div>
+<div id="start-screen"><div id="bubbles"></div><h1>סובבו את הטלפון לרוחב<br>וגעו במסך כדי להתחיל 🎹</h1></div>
 
 <div id="piano-scroll-wrapper">
     <div id="piano-container">
@@ -80,6 +128,27 @@
     Tone.context.lookAhead = 0;
 
     const startScreen = document.getElementById('start-screen');
+
+    /* בועות הכניסה. הצבעים הם צבעי התווים הקבועים של המשפחה. */
+    (function(){
+        const COLS = ['#ff6b6b','#ffa35c','#f2cf52','#5fcb82','#5cacea','#9c86ea','#e37bcb'];
+        const host = document.getElementById('bubbles');
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i < 16; i++) {
+            const b = document.createElement('i');
+            const d = 7 + Math.random() * 13;
+            b.style.setProperty('--d', d.toFixed(1) + 'vmin');
+            b.style.setProperty('--c', COLS[i % COLS.length]);
+            b.style.setProperty('--t', (7 + Math.random() * 7).toFixed(1) + 's');
+            b.style.setProperty('--delay', (-Math.random() * 12).toFixed(1) + 's');
+            b.style.setProperty('--sway', (Math.random() * 16 - 8).toFixed(1) + 'vw');
+            b.style.left = (Math.random() * 92).toFixed(1) + '%';
+            b.style.setProperty('--bx', (Math.random() * 70 - 35).toFixed(0) + 'vw');
+            b.style.setProperty('--by', (Math.random() * 70 - 35).toFixed(0) + 'vh');
+            frag.appendChild(b);
+        }
+        host.appendChild(frag);
+    })();
     let isMouseDown = false;
 
     const sampler = new Tone.Sampler({
@@ -96,11 +165,37 @@
     
     sampler.polyphony = 12;
     
+    /* הנגיעה פותחת את השמע, אבל המסך נסגר רק לרוחב.
+       לאורך הבועות ממשיכות לעלות ומחכות שיסובבו את המכשיר. */
+    const landscape = window.matchMedia('(orientation: landscape)');
+    let touched = false;
+
+    function leaveStartScreen(){
+        if (!touched || !landscape.matches) return;
+        if (startScreen.classList.contains('pop')) return;
+        startScreen.classList.add('pop');
+        setTimeout(function(){ startScreen.style.display = 'none'; }, 520);
+    }
+
     startScreen.addEventListener('click', async () => {
         await Tone.start();
-        startScreen.style.display = 'none';
-        initTouchControls(); // <--- מפעיל את הטאץ' רק אחרי שהמסך נסגר!
+        touched = true;
+        initTouchControls();   /* הקלידים מוכנים גם אם עוד לא סובבו */
+        leaveStartScreen();
     });
+
+    /* שלושה מאזינים, כי matchMedia לבדו לא תמיד נורה בסיבוב */
+    if (landscape.addEventListener) landscape.addEventListener('change', leaveStartScreen);
+    else if (landscape.addListener) landscape.addListener(leaveStartScreen);
+    window.addEventListener('resize', leaveStartScreen);
+    window.addEventListener('orientationchange', function(){ setTimeout(leaveStartScreen, 120); });
+
+    /* רשת ביטחון: בדיקה תקופתית כל עוד מסך הפתיחה פתוח.
+       באייפון אירועי הסיבוב לא תמיד מגיעים, ובלי זה המסך נשאר תקוע מעל הפסנתר. */
+    const watch = setInterval(function(){
+        if (startScreen.style.display === 'none') { clearInterval(watch); return; }
+        leaveStartScreen();
+    }, 300);
 
     const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const characterImages = ["https://hanibarsol.github.io/sol-virtualpiano/%D7%93%D7%95.png", "https://hanibarsol.github.io/sol-virtualpiano/%D7%A8%D7%94.png", "https://hanibarsol.github.io/sol-virtualpiano/%D7%9E%D7%99.png", "https://hanibarsol.github.io/sol-virtualpiano/%D7%A4%D7%94.png", "https://hanibarsol.github.io/sol-virtualpiano/%D7%A1%D7%95%D7%9C.png", "https://hanibarsol.github.io/sol-virtualpiano/%D7%9C%D7%94.png", "https://hanibarsol.github.io/sol-virtualpiano/%D7%A1%D7%99.png", "https://hanibarsol.github.io/sol-virtualpiano/%D7%93%D7%95.png", "https://hanibarsol.github.io/sol-virtualpiano/%D7%A8%D7%94.png", "https://hanibarsol.github.io/sol-virtualpiano/%D7%9E%D7%99.png", "https://hanibarsol.github.io/sol-virtualpiano/%D7%A4%D7%94.png", "https://hanibarsol.github.io/sol-virtualpiano/%D7%A1%D7%95%D7%9C.png", "https://hanibarsol.github.io/sol-virtualpiano/%D7%9C%D7%94.png", "https://hanibarsol.github.io/sol-virtualpiano/%D7%A1%D7%99.png"];
