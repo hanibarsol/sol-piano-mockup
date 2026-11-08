@@ -54,19 +54,49 @@
             100% { transform: translate3d(0,-118vh,0) scale(1.08);   opacity: 0 }
         }
 
-        /* בנגיעה הבועות מתפוצצות החוצה */
+        /* תו הזהב שמסתתר בתוך הבועה */
+        #bubbles i svg {
+            position: absolute; inset: 0; margin: auto;
+            width: 46%; height: 46%; display: block;
+            opacity: .95;
+            /* צל כהה ולא זוהר, אחרת התו נבלע בבועה הצהובה והכתומה */
+            filter: drop-shadow(0 1px 2px rgba(58,26,0,.6)) drop-shadow(0 0 1px rgba(58,26,0,.5));
+        }
+
+        /* בנגיעה קליפת הבועה נפקעת ומשחררת את התו */
         #start-screen.pop #bubbles i {
-            animation: burst .5s cubic-bezier(.2,.8,.3,1) forwards;
+            animation: burst .34s ease-out forwards;
         }
         @keyframes burst {
-            0%   { opacity: .85 }
-            100% { transform: translate3d(var(--bx),var(--by),0) scale(1.9); opacity: 0 }
+            0%   { opacity: .9 }
+            60%  { opacity: .55 }
+            100% { transform: scale(1.75); opacity: 0 }
         }
-        #start-screen.pop { transition: opacity .42s ease .12s; opacity: 0 }
+        #start-screen.pop #bubbles i svg { opacity: 0; transition: opacity .12s linear }
+
+        /* התווים נופלים אל הקלידים ונמסים לתוכם */
+        .goldnote {
+            position: fixed; z-index: 1001; pointer-events: none;
+            width: var(--s); height: var(--s);
+            animation: fall var(--ft) cubic-bezier(.25,.02,.55,1) forwards;
+        }
+        .goldnote svg { width: 100%; height: 100%; display: block;
+            filter: drop-shadow(0 0 6px rgba(255,214,110,.85)); }
+        @keyframes fall {
+            0%   { transform: translate3d(0,0,0) rotate(0deg) scale(.9);   opacity: 0 }
+            12%  { transform: translate3d(0,0,0) rotate(0deg) scale(1.18); opacity: 1 }
+            62%  { opacity: 1 }
+            100% { transform: translate3d(var(--fx),var(--fy),0) rotate(var(--fr)) scale(.42); opacity: 0 }
+        }
+
+        /* הרקע השחור מתפוגג והפסנתר מתגלה מתחתיו */
+        #start-screen.pop { background: rgba(0,0,0,0); transition: background .85s ease .2s }
+        #start-screen.pop h1 { opacity: 0; transition: opacity .28s ease }
 
         @media (prefers-reduced-motion: reduce) {
             #bubbles i { animation: none; opacity: .5 }
             #start-screen.pop #bubbles i { animation: none }
+            .goldnote { animation: none; opacity: 0 }
         }
 
         #piano-scroll-wrapper {
@@ -129,6 +159,58 @@
 
     const startScreen = document.getElementById('start-screen');
 
+    /* תו זהב מצויר, לא אימוג'י. שתי צורות לסירוגין: תו בודד ותו כפול. */
+    window.goldNoteSvg = function(i){
+        const id = 'g' + i + '_' + Math.floor(Math.random() * 1e6);
+        const grad =
+            '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1">' +
+              '<stop offset="0" stop-color="#FFE9A8"/>' +
+              '<stop offset=".5" stop-color="#FFC94A"/>' +
+              '<stop offset="1" stop-color="#E08C12"/>' +
+            '</linearGradient></defs>';
+        const fill = 'url(#' + id + ')';
+        if (i % 2 === 0) {
+            /* תו שמינית בודד */
+            return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' + grad +
+              '<ellipse cx="8.4" cy="17.6" rx="4.3" ry="3.4" transform="rotate(-18 8.4 17.6)" fill="' + fill + '"/>' +
+              '<path d="M12.3 17.2V4.2c3.6.7 6 2.6 6 5.6 0 1.5-.6 2.8-1.7 3.9" ' +
+                    'stroke="' + fill + '" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
+            '</svg>';
+        }
+        /* שני תווים מחוברים */
+        return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">' + grad +
+          '<ellipse cx="6.3" cy="18.1" rx="3.7" ry="2.9" transform="rotate(-18 6.3 18.1)" fill="' + fill + '"/>' +
+          '<ellipse cx="17.3" cy="15.9" rx="3.7" ry="2.9" transform="rotate(-18 17.3 15.9)" fill="' + fill + '"/>' +
+          '<path d="M9.6 17.7V6.1l10.9-2.3v11.6" stroke="' + fill + '" stroke-width="2.1" ' +
+                'stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
+          '<path d="M9.6 9.1l10.9-2.3" stroke="' + fill + '" stroke-width="2.1" stroke-linecap="round"/>' +
+        '</svg>';
+    };
+
+    /* בנגיעה: כל בועה משחררת את התו שבתוכה, והתו נופל אל הקלידים ונמס */
+    function releaseGoldNotes(){
+        const bubbles = document.querySelectorAll('#bubbles i');
+        const vh = window.innerHeight, vw = window.innerWidth;
+        const landing = vh * 0.82;          /* גובה הקלידים */
+        bubbles.forEach(function(b){
+            const r = b.getBoundingClientRect();
+            if (!r.width || r.bottom < 0 || r.top > vh) return;
+            const size = Math.max(18, r.width * 0.52);
+            const n = document.createElement('span');
+            n.className = 'goldnote';
+            n.innerHTML = b.innerHTML;
+            n.style.left = (r.left + r.width / 2 - size / 2) + 'px';
+            n.style.top  = (r.top  + r.height / 2 - size / 2) + 'px';
+            n.style.setProperty('--s', size.toFixed(0) + 'px');
+            n.style.setProperty('--fx', ((vw / 2 - r.left) * 0.16 + (Math.random() * 40 - 20)).toFixed(0) + 'px');
+            n.style.setProperty('--fy', Math.max(40, landing - r.top).toFixed(0) + 'px');
+            n.style.setProperty('--fr', (Math.random() * 180 - 90).toFixed(0) + 'deg');
+            n.style.setProperty('--ft', (0.95 + Math.random() * 0.5).toFixed(2) + 's');
+            document.body.appendChild(n);
+            setTimeout(function(){ n.remove(); }, 1800);
+        });
+    }
+
     /* בועות הכניסה. הצבעים הם צבעי התווים הקבועים של המשפחה. */
     (function(){
         const COLS = ['#ff6b6b','#ffa35c','#f2cf52','#5fcb82','#5cacea','#9c86ea','#e37bcb'];
@@ -136,6 +218,7 @@
         const frag = document.createDocumentFragment();
         for (let i = 0; i < 16; i++) {
             const b = document.createElement('i');
+            b.innerHTML = window.goldNoteSvg(i);
             const d = 7 + Math.random() * 13;
             b.style.setProperty('--d', d.toFixed(1) + 'vmin');
             b.style.setProperty('--c', COLS[i % COLS.length]);
@@ -173,8 +256,10 @@
     function leaveStartScreen(){
         if (!touched || !landscape.matches) return;
         if (startScreen.classList.contains('pop')) return;
+        releaseGoldNotes();
         startScreen.classList.add('pop');
-        setTimeout(function(){ startScreen.style.display = 'none'; }, 520);
+        /* ארוך יותר מקודם, כדי שהנפילה תספיק להיראות */
+        setTimeout(function(){ startScreen.style.display = 'none'; }, 1150);
     }
 
     startScreen.addEventListener('click', async () => {
