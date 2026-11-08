@@ -222,7 +222,7 @@
          ולכן המעבר ביניהן לא קופץ */
       var face = c.anim
         ? '<img src="anim/'+c.note+'.jpg" alt="">'+
-          '<video class="clip" src="anim/'+c.note+'.mp4" muted playsinline preload="auto"></video>'
+          '<video class="clip" src="anim/'+c.note+'.mp4" muted loop playsinline preload="auto"></video>'
         : '<img src="'+BASE+c.img+'" alt="">';
       card.innerHTML='<div class="inner">'+
           '<div class="face back">'+backSvg()+'</div>'+
@@ -280,28 +280,19 @@
     setTimeout(function(){ card.classList.remove('jump'); },620);
   }
 
-  /* דמות עם הנפשה מנגנת אותה, ודמות בלי הנפשה קופצת.
-     התמונה נעלמת רק כשההנפשה באמת מתנגנת. אם היא לא יוצאת לדרך תוך שליש שנייה,
-     הקלף קופץ במקום, כדי שלעולם לא יישאר קלף ריק. */
+  /* זוג שנמצא ממשיך לנוע בלולאה עד סוף המשחק.
+     התמונה נעלמת רק כשהדפדפן מדווח שההנפשה רצה, ולכן קלף לא יכול להישאר ריק.
+     אם היא מתעכבת, הקלף פועם פעם אחת, וכשהיא כן מתחילה הוא עובר אליה. */
   function celebrate(card){
     var v=card.querySelector('video.clip');
     if(!v){ jumpOnly(card); return; }
-    var decided=false, timer;
-    function start(){
-      if(decided) return;
-      decided=true; clearTimeout(timer);
+    var started=false;
+    v.addEventListener('playing', function(){
+      started=true;
       card.classList.add('playing');
-      setTimeout(function(){ card.classList.remove('playing'); },1200);
-    }
-    v.addEventListener('playing', start, {once:true});
-    timer=setTimeout(function(){
-      if(decided) return;
-      decided=true;
-      v.removeEventListener('playing', start);
-      try{ v.pause(); }catch(e){}
-      jumpOnly(card);
-    },600);
-    try{ v.muted=true; v.currentTime=0; var q=v.play(); if(q&&q.catch) q.catch(function(){}); }catch(e){}
+    }, {once:true});
+    setTimeout(function(){ if(!started) jumpOnly(card); },600);
+    try{ v.muted=true; v.loop=true; v.currentTime=0; var q=v.play(); if(q&&q.catch) q.catch(function(){}); }catch(e){}
   }
 
   function pick(card){
