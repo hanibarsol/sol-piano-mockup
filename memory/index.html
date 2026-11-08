@@ -320,8 +320,10 @@
   }
 
   function finish(){
-    /* בלי ניגון כל התווים בסוף, לבקשת חני ב-2026-11-07: "זה נשמע רע" */
-    setTimeout(function(){ again.classList.add('show'); }, 1450);
+    /* בלי ניגון כל התווים בסוף, לבקשת חני ב-2026-11-07: "זה נשמע רע".
+       במקומם מוזיקת סיום, שמתחילה רק אחרי שצליל הזוג האחרון נגמר. */
+    setTimeout(function(){ play('snd/win.mp3'); }, 1500);
+    setTimeout(function(){ again.classList.add('show'); }, 1800);
   }
 
   function newGame(){ build(); requestAnimationFrame(function(){ dealOut(); }); }
