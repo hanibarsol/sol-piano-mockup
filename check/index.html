@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>בדיקת תווי הזהב</title>
+<style>
+  :root{ --orange:#F2A412; --turq:#189E8A; }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:#140820; color:#fff; min-height:100vh;
+    font-family:system-ui,"Segoe UI",Arial,sans-serif;
+    padding:22px max(16px,env(safe-area-inset-right,0px)) 50px max(16px,env(safe-area-inset-left,0px));
+  }
+  .wrap{max-width:520px; margin:0 auto}
+  h1{margin:0 0 6px; font-size:20px; font-weight:800}
+  .lead{margin:0 0 20px; font-size:14px; line-height:1.7; opacity:.82}
+  .row{
+    display:flex; align-items:center; gap:14px;
+    background:rgba(255,255,255,.06); border-radius:16px;
+    padding:14px 15px; margin-bottom:12px;
+  }
+  .num{
+    flex:0 0 26px; height:26px; border-radius:8px; background:var(--orange);
+    color:#3a2300; display:grid; place-items:center; font-weight:800; font-size:13px;
+  }
+  .stage{
+    flex:0 0 76px; height:76px; border-radius:14px;
+    background:#241036; display:flex; align-items:center; justify-content:center;
+    position:relative; overflow:hidden;
+  }
+  .label{flex:1; min-width:0; font-size:14.5px; font-weight:700; line-height:1.5}
+  .label small{display:block; font-weight:600; font-size:12.5px; opacity:.68; margin-top:3px}
+
+  /* 1. הדרך החדשה: מילוי אחיד, מאפייני גודל, מרכוז flex */
+  .t1 b{display:block; width:62%; height:62%}
+  .t1 svg{display:block; width:100%; height:100%}
+
+  /* 2. אותו תו בתוך בועה */
+  .bub{
+    width:62px; height:62px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(circle at 32% 28%, rgba(255,255,255,.92) 0 6%, rgba(255,255,255,.28) 14%, rgba(255,255,255,0) 42%),
+      radial-gradient(circle at 50% 50%, #5cacea 0 58%, rgba(255,255,255,.14) 78%, rgba(255,255,255,.34) 100%);
+    box-shadow: inset 0 0 14px rgba(255,255,255,.35), 0 0 18px #5cacea;
+  }
+  .bub b{display:block; width:46%; height:46%}
+  .bub svg{display:block; width:100%; height:100%}
+
+  /* 3. הדרך הישנה: גרדיאנט עם url(#id) */
+  .t3 svg{display:block; width:62%; height:62%}
+
+  /* 4. הדרך הישנה: filter */
+  .t4 svg{display:block; width:62%; height:62%;
+    filter: drop-shadow(0 1px 2px rgba(58,26,0,.6));}
+
+  /* 5. הדרך הישנה: inset עם margin auto ואחוזים */
+  .t5 svg{position:absolute; inset:0; margin:auto; width:62%; height:62%; display:block}
+
+  /* 6. נפילה עם Web Animations, הדרך החדשה */
+  .t6 b{display:block; width:46%; height:46%}
+  .t6 svg{display:block; width:100%; height:100%}
+
+  /* 7. נפילה עם keyframes ומשתנה CSS, הדרך הישנה */
+  .t7 b{display:block; width:46%; height:46%;
+    animation: oldfall 1.6s ease-in-out infinite alternate}
+  .t7 svg{display:block; width:100%; height:100%}
+  @keyframes oldfall{
+    from{ transform: translate3d(0,0,0) }
+    to  { transform: translate3d(var(--ox,0px), var(--oy,18px), 0) }
+  }
+
+  .foot{
+    margin-top:24px; padding:16px; border-radius:16px;
+    background:rgba(255,255,255,.07); font-size:14px; line-height:1.8;
+  }
+  .foot b{color:var(--orange)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>בדיקת תווי הזהב</h1>
+  <p class="lead">בכל שורה אמור להופיע תו זהב במשבצת הכהה. תסתכלי ותגידי לי <b>אילו מספרים ריקים</b>. זה יגיד לי בדיוק מה הדפדפן שלך מסרב לצייר.</p>
+
+  <div class="row"><span class="num">1</span><span class="stage t1" id="s1"></span>
+    <span class="label">תו פשוט<small>מילוי אחיד, גודל במאפיינים</small></span></div>
+
+  <div class="row"><span class="num">2</span><span class="stage" id="s2"></span>
+    <span class="label">תו בתוך בועה<small>כמו במסך הכניסה</small></span></div>
+
+  <div class="row"><span class="num">3</span><span class="stage t3" id="s3"></span>
+    <span class="label">תו עם גרדיאנט<small>הדרך הישנה, url עם מזהה</small></span></div>
+
+  <div class="row"><span class="num">4</span><span class="stage t4" id="s4"></span>
+    <span class="label">תו עם צל CSS<small>הדרך הישנה, filter</small></span></div>
+
+  <div class="row"><span class="num">5</span><span class="stage t5" id="s5"></span>
+    <span class="label">תו ממורכז ב-inset<small>הדרך הישנה</small></span></div>
+
+  <div class="row"><span class="num">6</span><span class="stage t6" id="s6"></span>
+    <span class="label">תו שזז בקוד<small>הדרך החדשה לנפילה</small></span></div>
+
+  <div class="row"><span class="num">7</span><span class="stage t7" id="s7"></span>
+    <span class="label">תו שזז עם משתנה CSS<small>הדרך הישנה לנפילה</small></span></div>
+
+  <div class="foot">
+    אם <b>1, 2 ו-6</b> מופיעים וכל השאר ריקים, התיקון שעשיתי נכון בדיוק.<br>
+    אם גם <b>1</b> ריק, הבעיה עמוקה יותר ואבנה את התו אחרת לגמרי.
+  </div>
+</div>
+
+<script>
+(function(){
+  function solid(dbl, glow){
+    var GOLD='#FFC63F', EDGE = glow ? '#FFF0BC' : '#6B3B00';
+    var w = glow ? 3.4 : 2.6, o = glow ? .75 : .55;
+    var shape = dbl
+      ? '<ellipse cx="6.3" cy="18.1" rx="3.8" ry="3" transform="rotate(-18 6.3 18.1)"/>'
+      + '<ellipse cx="17.3" cy="15.9" rx="3.8" ry="3" transform="rotate(-18 17.3 15.9)"/>'
+      + '<path d="M9.7 17.9V6.1l10.9-2.3v11.6" fill="none"/>'
+      + '<path d="M9.7 9.2l10.9-2.3" fill="none"/>'
+      : '<ellipse cx="8.4" cy="17.6" rx="4.4" ry="3.5" transform="rotate(-18 8.4 17.6)"/>'
+      + '<path d="M12.4 17.4V4.1c3.7.7 6.1 2.7 6.1 5.7 0 1.6-.6 2.9-1.8 4" fill="none"/>';
+    return '<svg viewBox="0 0 24 24" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">'
+      + '<g stroke="'+EDGE+'" stroke-width="'+(w+2.4)+'" stroke-opacity="'+o+'" stroke-linecap="round" stroke-linejoin="round" fill="none">'+shape+'</g>'
+      + '<g fill="'+GOLD+'" stroke="'+GOLD+'" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round">'+shape+'</g>'
+      + '</svg>';
+  }
+  function gradient(){
+    var id='chk'+Math.floor(Math.random()*1e6);
+    return '<svg viewBox="0 0 24 24" fill="none">'
+      + '<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1">'
+      + '<stop offset="0" stop-color="#FFE9A8"/><stop offset=".5" stop-color="#FFC94A"/><stop offset="1" stop-color="#E08C12"/>'
+      + '</linearGradient></defs>'
+      + '<ellipse cx="8.4" cy="17.6" rx="4.3" ry="3.4" transform="rotate(-18 8.4 17.6)" fill="url(#'+id+')"/>'
+      + '<path d="M12.3 17.2V4.2c3.6.7 6 2.6 6 5.6 0 1.5-.6 2.8-1.7 3.9" stroke="url(#'+id+')" stroke-width="2.2" stroke-linecap="round" fill="none"/>'
+      + '</svg>';
+  }
+
+  document.getElementById('s1').innerHTML = '<b>' + solid(false) + '</b>';
+  document.getElementById('s2').innerHTML = '<span class="bub"><b>' + solid(true) + '</b></span>';
+  document.getElementById('s3').innerHTML = gradient();
+  document.getElementById('s4').innerHTML = gradient();
+  document.getElementById('s5').innerHTML = gradient();
+  document.getElementById('s6').innerHTML = '<b>' + solid(false, true) + '</b>';
+
+  var seven = document.getElementById('s7');
+  seven.innerHTML = '<b>' + solid(true) + '</b>';
+  var b7 = seven.querySelector('b');
+  b7.style.setProperty('--ox', '10px');
+  b7.style.setProperty('--oy', '16px');
+
+  var b6 = document.getElementById('s6').querySelector('b');
+  if (b6.animate) {
+    b6.animate(
+      [{ transform: 'translate3d(0,0,0)' }, { transform: 'translate3d(10px,16px,0)' }],
+      { duration: 1600, direction: 'alternate', iterations: Infinity, easing: 'ease-in-out' }
+    );
+  }
+})();
+</script>
+</body>
+</html>
