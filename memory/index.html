@@ -114,6 +114,24 @@
   }
   #again.show{ opacity:1; transform:translateX(-50%) scale(1); pointer-events:auto }
 
+  /* ---------- כפתור המוזיקה ---------- */
+  #mute{
+    position:fixed; z-index:70;
+    top:max(10px,env(safe-area-inset-top,0px));
+    left:max(10px,env(safe-area-inset-left,0px));
+    width:40px; height:40px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(20,8,32,.62); color:#fff;
+    display:none; align-items:center; justify-content:center;
+    -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+  }
+  #mute.show{display:flex}
+  #mute svg{width:22px; height:22px; display:block}
+  #mute .slash{display:none}
+  #mute.off{background:rgba(20,8,32,.45); color:rgba(255,255,255,.6)}
+  #mute.off .slash{display:block}
+  #mute.off .waves{display:none}
+  #mute:active{transform:scale(.92)}
+
   @media (prefers-reduced-motion:reduce){
     .inner.flip{animation:none} .card.jump .front img{animation:none}
     .card.dealing{transition:none} #again{transition:none}
@@ -131,7 +149,20 @@
   <button id="go">אפשר להתחיל</button>
 </div>
 
+<button id="mute" aria-label="מוזיקה" aria-pressed="false">
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M4 9.5h3.4L12 5.4v13.2L7.4 14.5H4z" fill="currentColor"/>
+    <g class="waves" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none">
+      <path d="M15.4 9.3a4 4 0 0 1 0 5.4"/>
+      <path d="M18 7a7.4 7.4 0 0 1 0 10"/>
+    </g>
+    <path class="slash" d="M15.6 9.6l4.8 4.8M20.4 9.6l-4.8 4.8"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+  </svg>
+</button>
+
 <audio id="player" preload="none" playsinline></audio>
+<audio id="bgm" src="snd/bg.mp3" loop preload="auto" playsinline></audio>
 
 <script>
 (function(){
@@ -154,6 +185,27 @@
       player=document.getElementById('player');
 
   var first=null, lock=true, found=0, lastOrder='';
+  var bgm=document.getElementById('bgm'),
+      muteBtn=document.getElementById('mute'),
+      muted=false;
+
+  /* באייפון אי אפשר להנמיך נגן דרך הקוד, ולכן עוצמת הרקע אפויה בתוך הקובץ.
+     muted לעומת זאת כן נתמך, ועליו מבוסס הכפתור. */
+  function setMuted(v){
+    muted=v;
+    bgm.muted=v;
+    muteBtn.classList.toggle('off',v);
+    muteBtn.setAttribute('aria-pressed', v?'true':'false');
+    if(!v) startBgm();
+  }
+  function startBgm(){
+    if(muted) return;
+    try{ var q=bgm.play(); if(q&&q.catch) q.catch(function(){}); }catch(e){}
+  }
+  muteBtn.addEventListener('click',function(e){
+    e.preventDefault(); e.stopPropagation();
+    setMuted(!muted);
+  });
 
   function play(src){
     try{
@@ -162,20 +214,20 @@
       var p=player.play(); if(p&&p.catch) p.catch(function(){});
     }catch(e){}
   }
-  /* הצלחה: שלושת הפעמונים וצליל הדמות מעורבבים מראש לקובץ אחד.
-     ככה הם נשמעים בו זמנית בכל מכשיר, בלי נגן שני שאייפון עלול לחסום. */
-  function matchSound(n){ play('snd/match/'+n+'.mp3'); }
+  /* הצלחה: פעמונים בלבד. צליל התו בוטל ב-2026-11-09 לבקשת חני, "לא נשמע טוב". */
+  function matchSound(){ play('snd/bells.mp3'); }
   function shuffleSound(){ play('snd/shuffle.mp3'); }
   /* נקישת עץ, בחירת חני ב-2026-11-07 (הווש נדחה).
      הנעילה הזאת נשארת כאן כדי ששני קלפים שנסגרים יחד לא יישמעו כפול. */
-  var FLIP='tok.mp3';
+  /* קלף שבוחרים וקלף שחוזר אינם אותו רגע, ולכן אינם אותו צליל.
+     החזרה נמוכה ורכה יותר, אבל לא שלילית: טעות כאן אינה כישלון. */
+  var FLIP='tok.mp3', BACK='back.mp3';
   var lastFlip=0;
-  function flipSound(){
-    if(!FLIP) return;
+  function flipSound(up){
     var t=Date.now();
     if(t-lastFlip<90) return;
     lastFlip=t;
-    play('snd/'+FLIP);
+    play('snd/'+(up?FLIP:BACK));
   }
 
   /* ערבוב פישר-ייטס, ולעולם לא אותה פריסה כמו במשחק הקודם */
@@ -202,7 +254,7 @@
   }
 
   function turn(card,up){
-    flipSound();
+    flipSound(up);
     var inner=card.querySelector('.inner');
     inner.classList.remove('flip'); void inner.offsetWidth; inner.classList.add('flip');
     if(up) card.classList.add('up'); else card.classList.remove('up');
@@ -306,7 +358,7 @@
       lock=true;
       var a=first,b=card; first=null;
       setTimeout(function(){
-        matchSound(b.dataset.note);
+        matchSound();
         a.classList.add('done'); b.classList.add('done');
         celebrate(a); celebrate(b);
         found++; lock=false;
@@ -322,14 +374,19 @@
   function finish(){
     /* בלי ניגון כל התווים בסוף, לבקשת חני ב-2026-11-07: "זה נשמע רע".
        במקומם מוזיקת סיום, שמתחילה רק אחרי שצליל הזוג האחרון נגמר. */
-    setTimeout(function(){ play('snd/win.mp3'); }, 1500);
+    setTimeout(function(){
+      try{ bgm.pause(); }catch(e){}
+      play('snd/win.mp3');
+    }, 1500);
     setTimeout(function(){ again.classList.add('show'); }, 1800);
   }
 
-  function newGame(){ build(); requestAnimationFrame(function(){ dealOut(); }); }
+  function newGame(){ startBgm(); build(); requestAnimationFrame(function(){ dealOut(); }); }
 
   goBtn.addEventListener('click',function(){
     startEl.hidden=true;
+    muteBtn.classList.add('show');
+    startBgm();          /* כאן, כי זאת הנגיעה האמיתית שאייפון דורש */
     newGame();
   });
   again.addEventListener('click',newGame);
