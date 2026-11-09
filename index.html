@@ -87,14 +87,25 @@
 
         /* בנגיעה קליפת הבועה נפקעת ומשחררת את התו */
         #start-screen.pop #bubbles i {
-            animation: burst .45s ease-out forwards;
+            animation: burst .28s cubic-bezier(.2,.9,.4,1) forwards;
         }
         @keyframes burst {
-            0%   { opacity: .9 }
-            60%  { opacity: .55 }
-            100% { transform: scale(1.75); opacity: 0 }
+            0%   { transform: scale(1);    opacity: .92 }
+            40%  { transform: scale(1.24); opacity: .85 }
+            100% { transform: scale(1.5);  opacity: 0 }
         }
-        #start-screen.pop #bubbles i svg { opacity: 0; transition: opacity .12s linear }
+
+        /* רסיסי הבועה. נשארים באוויר רגע, נסחפים ומתפוגגים. */
+        .bubpop {
+            position: fixed; z-index: 2147482000; pointer-events: none;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 34% 30%, rgba(255,255,255,.95) 0 10%, rgba(255,255,255,.32) 24%, rgba(255,255,255,0) 56%),
+                radial-gradient(circle at 50% 50%, var(--pc,#fff) 0 54%, rgba(255,255,255,.18) 80%, rgba(255,255,255,.42) 100%);
+            box-shadow: 0 0 10px var(--pc,#fff), inset 0 0 6px rgba(255,255,255,.5);
+        }
+        #start-screen.pop #bubbles i svg,
+        #start-screen.pop #bubbles i img { opacity: 0; transition: opacity .12s linear }
 
         /* התווים נופלים אל הקלידים ונמסים לתוכם.
            התנועה נבנית בקוד ולא ב-keyframes, כי ספארי לא תמיד מנפיש
@@ -216,6 +227,36 @@
                '</svg>';
     };
 
+    /* רסיסי בועה שמתפזרים באוויר. transform ו-opacity בלבד, כדי שלא יכביד. */
+    function popParticles(cx, cy, radius, color, count){
+        for (let k = 0; k < count; k++) {
+            const d = document.createElement('span');
+            d.className = 'bubpop';
+            const size = 5 + Math.random() * 8;
+            d.style.width  = size.toFixed(1) + 'px';
+            d.style.height = size.toFixed(1) + 'px';
+            d.style.left   = (cx - size / 2).toFixed(0) + 'px';
+            d.style.top    = (cy - size / 2).toFixed(0) + 'px';
+            d.style.setProperty('--pc', color || '#9c86ea');
+            document.body.appendChild(d);
+
+            const ang  = Math.random() * Math.PI * 2;
+            const dist = radius * (0.75 + Math.random() * 1.5);
+            const dx   = Math.cos(ang) * dist;
+            const dy   = Math.sin(ang) * dist - radius * 0.35;   /* נוטים מעט למעלה */
+            const dur  = 520 + Math.random() * 520;
+
+            if (d.animate) {
+                d.animate([
+                    { transform: 'translate3d(0,0,0) scale(.5)', opacity: 0 },
+                    { transform: 'translate3d(' + (dx * .35).toFixed(0) + 'px,' + (dy * .35).toFixed(0) + 'px,0) scale(1.1)', opacity: 1, offset: .22 },
+                    { transform: 'translate3d(' + dx.toFixed(0) + 'px,' + (dy - radius * .5).toFixed(0) + 'px,0) scale(.35)', opacity: 0 }
+                ], { duration: dur, easing: 'cubic-bezier(.15,.7,.4,1)', fill: 'forwards' });
+            }
+            setTimeout(function(){ d.remove(); }, dur + 260);
+        }
+    }
+
     /* בנגיעה: כל בועה משחררת את התו שבתוכה, והתו נופל אל הקלידים ונמס.
        כל תו נופל מצויר מחדש ולא מועתק, כדי שלא יהיו מזהי גרדיאנט כפולים. */
     window.__fallMs = 0;
@@ -224,9 +265,34 @@
         const vh = window.innerHeight, vw = window.innerWidth;
         const landing = vh * 0.82;          /* גובה הקלידים */
         let longest = 0;
+        /* הבועה הקרובה ביותר לנקודת המגע נבקעת ראשונה ובהתזה גדולה יותר */
+        const touch = window.__lastTouch;
+        let nearest = -1, nearDist = 1e9;
+        if (touch) {
+            bubbles.forEach(function(b, i){
+                const r = b.getBoundingClientRect();
+                if (!r.width) return;
+                const dx = (r.left + r.width / 2) - touch.x;
+                const dy = (r.top + r.height / 2) - touch.y;
+                const d = Math.sqrt(dx * dx + dy * dy);
+                if (d < nearDist) { nearDist = d; nearest = i; }
+            });
+            if (nearDist > vw * 0.4) nearest = -1;   /* נגעו רחוק מכל בועה */
+        }
+
         bubbles.forEach(function(b, i){
             const r = b.getBoundingClientRect();
             if (!r.width || r.bottom < 0 || r.top > vh) return;
+
+            const colour = b.style.getPropertyValue('--c') || '#9c86ea';
+            const bcx = r.left + r.width / 2, bcy = r.top + r.height / 2;
+            if (i === nearest) {
+                popParticles(bcx, bcy, r.width * 0.78, colour, 13);
+            } else {
+                setTimeout(function(){
+                    popParticles(bcx, bcy, r.width * 0.60, colour, 7);
+                }, 60 + Math.random() * 180);
+            }
             const size = Math.max(20, r.width * (b.dataset.face ? 0.8 : 0.55));
             const n = document.createElement('span');
             n.className = 'goldnote';
@@ -331,7 +397,10 @@
         setTimeout(function(){ startScreen.style.display = 'none'; }, Math.max(900, fallMs + 250));
     }
 
-    startScreen.addEventListener('click', async () => {
+    startScreen.addEventListener('click', async (ev) => {
+        if (ev && typeof ev.clientX === 'number' && (ev.clientX || ev.clientY)) {
+            window.__lastTouch = { x: ev.clientX, y: ev.clientY };
+        }
         await Tone.start();
         touched = true;
         initTouchControls();   /* הקלידים מוכנים גם אם עוד לא סובבו */
