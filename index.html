@@ -27,8 +27,8 @@
 
         /* לאורך הפסנתר פשוט לא נחשף. בלי זה הוא נראה מעוך וכמו תקלה. */
         @media (orientation: portrait) {
-            #start-screen { display: flex !important; background: #140820; }
-            #piano-scroll-wrapper { visibility: hidden; }
+            body:not(.overlay) #start-screen { display: flex !important; background: #140820; }
+            body:not(.overlay) #piano-scroll-wrapper { visibility: hidden; }
         }
 
         /* ---------- בועות הכניסה ---------- */
@@ -743,7 +743,7 @@ window.initTouchControls = function(){
 </script>
 <style>
   #game{
-    position:fixed; inset:0; z-index:850; display:none;
+    position:fixed; inset:0; z-index:1200; display:none;
     flex-direction:column; background:#000;
   }
   #game.open{display:flex}
@@ -763,6 +763,23 @@ window.initTouchControls = function(){
   #game-back svg{width:58%;height:58%;display:block}
   #game-bar b{color:#EDEDF2; font-size:clamp(12px,3dvh,15px); font-weight:800}
   #game-frame{flex:1 1 auto; width:100%; border:0; display:block; background:#fff}
+
+  /* הסיפור מצולם לאורך, ולכן לרוחב הוא יוצא רצועה צרה.
+     זאת הצעה שנעלמת מעצמה, לא חסימה. */
+  #rotate-tip{
+    position:absolute; z-index:3; left:50%; transform:translateX(-50%);
+    top:calc(clamp(32px,8dvh,42px) + 18px);
+    display:none; align-items:center; gap:9px;
+    padding:9px 16px; border-radius:999px;
+    background:rgba(20,8,32,.86); color:#fff;
+    font-family:system-ui,"Segoe UI",sans-serif; font-size:14px; font-weight:700;
+    direction:rtl; pointer-events:none; opacity:0;
+    transition:opacity .4s ease;
+    -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+  }
+  #rotate-tip.show{display:flex; opacity:1}
+  #rotate-tip svg{width:20px; height:20px; display:block; flex:0 0 auto}
+  @media (orientation: portrait){ #rotate-tip{display:none !important} }
 </style>
 
 <div id="game">
@@ -779,6 +796,14 @@ window.initTouchControls = function(){
     <b>חזרה לפסנתר</b>
   </div>
   <iframe id="game-frame" title="משחק הזיכרון" allow="autoplay"></iframe>
+  <div id="rotate-tip">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="7.5" y="2.6" width="9" height="15" rx="2" stroke="#FFC63F" stroke-width="2"/>
+      <path d="M4.4 19.4a9 9 0 0 0 15.2 0" stroke="#FFC63F" stroke-width="2" stroke-linecap="round"/>
+      <path d="M17.2 19.4h2.8v-2.8" stroke="#FFC63F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>אפשר לסובב את הנייד לאורך, הסיפור יוצא גדול יותר</span>
+  </div>
 </div>
 
 <script>
@@ -803,18 +828,37 @@ window.initTouchControls = function(){
 
   var kind=null;
 
+  var tip=document.getElementById('rotate-tip');
+  var tipTimer=null;
+
+  function showTip(){
+    if(!tip) return;
+    clearTimeout(tipTimer);
+    tip.classList.add('show');
+    tipTimer=setTimeout(function(){ tip.classList.remove('show'); }, 5200);
+  }
+  function hideTip(){
+    if(!tip) return;
+    clearTimeout(tipTimer);
+    tip.classList.remove('show');
+  }
+
   function openVideo(e){
     e.preventDefault(); e.stopPropagation();
     kind='video';
     frame.title='הסיפור של המשפחה';
     if(frame.src!==VIDEO) frame.src=VIDEO;
     box.classList.add('open');
+    document.body.classList.add('overlay');   /* כדי שסיבוב לאורך לא יחזיר את מסך הפתיחה */
+    showTip();
   }
   ['touchstart','mousedown'].forEach(function(ev){
     if(padVideo) padVideo.addEventListener(ev,openVideo,{passive:false});
     /* בסגירה: סרטון חייב להיפסק, משחק נשאר כדי לא לאבד התקדמות */
     back.addEventListener(ev,function(){
       if(kind==='video'){ frame.src='about:blank'; kind=null; }
+      document.body.classList.remove('overlay');
+      hideTip();
     },{passive:false});
   });
   /* הכרית הכתומה: משחק הזיכרון. נשאר טעון כדי לא לאבד התקדמות */
@@ -826,6 +870,8 @@ window.initTouchControls = function(){
     frame.title='מי מסתתר כאן?';
     if(frame.src.indexOf(GAME)<0) frame.src=GAME;
     box.classList.add('open');
+    document.body.classList.add('overlay');
+    hideTip();                                 /* המשחק עובד בשתי האוריינטציות */
   }
   if(padGame) ['touchstart','mousedown'].forEach(function(ev){
     padGame.addEventListener(ev,openGame,{passive:false});
