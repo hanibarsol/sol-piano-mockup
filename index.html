@@ -25,10 +25,27 @@
             text-shadow: 0 2px 14px rgba(0,0,0,.75);
         }
 
+        /* מי שכבר נכנס לפסנתר וחזר לאורך רואה הודעה אחרת.
+           ההודעה הראשונה כבר הוסתרה, והבועות כבר התפוצצו, ובלי זה
+           נשאר מסך סגול ריק בלי שום הסבר. */
+        #turn-msg {
+            display: none; position: relative; z-index: 2;
+            margin: 0; padding: 0 24px; text-align: center;
+            font-size: 24px; line-height: 1.7; font-weight: 700;
+            opacity: 1;
+        }
+        #turn-msg svg {
+            width: 54px; height: 54px; display: block; margin: 0 auto 18px;
+        }
+
         /* לאורך הפסנתר פשוט לא נחשף. בלי זה הוא נראה מעוך וכמו תקלה. */
         @media (orientation: portrait) {
             body:not(.overlay) #start-screen { display: flex !important; background: #140820; }
             body:not(.overlay) #piano-scroll-wrapper { visibility: hidden; }
+
+            body.entered:not(.overlay) #start-screen h1 { display: none }
+            body.entered:not(.overlay) #bubbles { display: none }
+            body.entered:not(.overlay) #turn-msg { display: block }
         }
 
         /* ---------- בועות הכניסה ---------- */
@@ -144,7 +161,18 @@
 </head>
 <body>
 
-<div id="start-screen"><div id="bubbles"></div><h1>סובבו את הטלפון לרוחב<br>וגעו במסך כדי להתחיל 🎹</h1></div>
+<div id="start-screen">
+  <div id="bubbles"></div>
+  <h1>סובבו את הטלפון לרוחב<br>וגעו במסך כדי להתחיל 🎹</h1>
+  <div id="turn-msg">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="8.2" y="2.4" width="7.6" height="13" rx="1.8" stroke="#FFC63F" stroke-width="1.8"/>
+      <path d="M4.2 17.6a9 9 0 0 0 15.6 0" stroke="#FFC63F" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M17.4 17.6h2.6V15" stroke="#FFC63F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    סובבו את הנייד לרוחב<br>והפסנתר חוזר
+  </div>
+</div>
 
 <div id="piano-scroll-wrapper">
     <div id="piano-container">
@@ -297,6 +325,7 @@
         if (!touched || !landscape.matches) return;
         if (startScreen.classList.contains('pop')) return;
         const fallMs = releaseGoldNotes();
+        document.body.classList.add('entered');
         startScreen.classList.add('pop');
         /* נסגר רק אחרי שהתו האחרון נחת, אחרת display:none קוטע את הנפילה */
         setTimeout(function(){ startScreen.style.display = 'none'; }, Math.max(900, fallMs + 250));
