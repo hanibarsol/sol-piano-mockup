@@ -227,7 +227,7 @@
   </div>
 </div>
 
-<video id="intro" src="intro-v2.mp4" muted playsinline webkit-playsinline preload="auto" aria-hidden="true"></video>
+<video id="intro" src="intro-v3.mp4" muted playsinline webkit-playsinline preload="auto" aria-hidden="true"></video>
 
 <div id="piano-scroll-wrapper">
     <div id="piano-container">
@@ -323,7 +323,7 @@
         function onPlaying(){
             started = true;
             v.classList.add('vis');
-            const left = Math.max(600, (v.duration || 2.6) * 1000 - v.currentTime * 1000);
+            const left = Math.max(600, (v.duration || 5.5) * 1000 - v.currentTime * 1000);
             setTimeout(finish, left + 120);
         }
         /* מתגלה רק כשהוא באמת רץ. בלי זה רואים מלבן שחור. */
