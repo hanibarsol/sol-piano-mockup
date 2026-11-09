@@ -81,20 +81,12 @@
         /* פנים של דמות. גדולות מעט מהתו, כי צריך לזהות מי זאת.
            החיתוך הוא ריבוע, ולכן בלי המסכה נשאר קו ישר מתחת לכתפיים.
            המסכה ממיסה את הקצה למעגל, והחיתוך העגול הוא גיבוי אם היא לא נתמכת. */
-        #bubbles i b.face {
-            width: 72%; height: 72%;
-            border-radius: 50%; overflow: hidden;
-            -webkit-mask-image: radial-gradient(circle at 50% 46%, #000 0 56%, rgba(0,0,0,.9) 68%, rgba(0,0,0,0) 80%);
-                    mask-image: radial-gradient(circle at 50% 46%, #000 0 56%, rgba(0,0,0,.9) 68%, rgba(0,0,0,0) 80%);
-        }
+        /* הדהייה העגולה אפויה בתוך קובץ התמונה, ולכן אין כאן מסכה.
+           מסכת CSS לא נתמכת אחיד, וגם יצרה דהייה כפולה. */
+        #bubbles i b.face { width: 72%; height: 72% }
         #bubbles i img { display: block; width: 100%; height: 100%;
             object-fit: contain; pointer-events: none }
-        .goldnote img {
-            display: block; width: 100%; height: 100%; object-fit: contain;
-            border-radius: 50%;
-            -webkit-mask-image: radial-gradient(circle at 50% 46%, #000 0 56%, rgba(0,0,0,.9) 68%, rgba(0,0,0,0) 80%);
-                    mask-image: radial-gradient(circle at 50% 46%, #000 0 56%, rgba(0,0,0,.9) 68%, rgba(0,0,0,0) 80%);
-        }
+        .goldnote img { display: block; width: 100%; height: 100%; object-fit: contain }
         #bubbles i svg { display: block; width: 100%; height: 100%; opacity: .97 }
 
         /* בנגיעה קליפת הבועה נפקעת ומשחררת את התו */
@@ -261,7 +253,7 @@
     window.FACES = ['do','re','mi','fa','sol','la'];
 
     window.bubbleFace = function(id){
-        return '<img src="faces/' + id + '.png" alt="">';
+        return '<img src="faces/' + id + '-v2.png" alt="">';
     };
 
     window.goldNoteSvg = function(i, glow){
