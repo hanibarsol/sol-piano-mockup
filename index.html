@@ -61,6 +61,11 @@
         #bubbles i b {
             display: block; width: 46%; height: 46%; flex: 0 0 auto;
         }
+        /* פנים של דמות. גדולות מעט מהתו, כי צריך לזהות מי זאת. */
+        #bubbles i b.face { width: 72%; height: 72% }
+        #bubbles i img { display: block; width: 100%; height: 100%;
+            object-fit: contain; pointer-events: none }
+        .goldnote img { display: block; width: 100%; height: 100%; object-fit: contain }
         #bubbles i svg { display: block; width: 100%; height: 100%; opacity: .97 }
 
         /* בנגיעה קליפת הבועה נפקעת ומשחררת את התו */
@@ -154,6 +159,14 @@
     const startScreen = document.getElementById('start-screen');
 
     /* תו זהב מצויר, לא אימוג'י. שתי צורות לסירוגין: תו בודד ותו כפול. */
+    /* שש הדמויות שיש להן פנים. הדלת של סי אינה דמות ואין לה פנים,
+       ולכן היא נשארת עם תו זהב. */
+    window.FACES = ['do','re','mi','fa','sol','la'];
+
+    window.bubbleFace = function(id){
+        return '<img src="faces/' + id + '.png" alt="">';
+    };
+
     window.goldNoteSvg = function(i, glow){
         /* מילוי אחיד ולא גרדיאנט, כי url(#id) דורש מזהה ייחודי ופתרון paint server,
            ושניהם נשברו בספארי. הניגודיות מגיעה מקו מתאר כהה. */
@@ -186,10 +199,12 @@
         bubbles.forEach(function(b, i){
             const r = b.getBoundingClientRect();
             if (!r.width || r.bottom < 0 || r.top > vh) return;
-            const size = Math.max(20, r.width * 0.55);
+            const size = Math.max(20, r.width * (b.dataset.face ? 0.8 : 0.55));
             const n = document.createElement('span');
             n.className = 'goldnote';
-            n.innerHTML = window.goldNoteSvg(i, true);
+            n.innerHTML = b.dataset.face
+                ? window.bubbleFace(b.dataset.face)
+                : window.goldNoteSvg(i, true);
             n.style.left   = (r.left + r.width / 2 - size / 2).toFixed(0) + 'px';
             n.style.top    = (r.top  + r.height / 2 - size / 2).toFixed(0) + 'px';
             n.style.width  = size.toFixed(0) + 'px';
@@ -229,10 +244,22 @@
         const COLS = ['#ff6b6b','#ffa35c','#f2cf52','#5fcb82','#5cacea','#9c86ea','#e37bcb'];
         const host = document.getElementById('bubbles');
         const frag = document.createDocumentFragment();
+
+        /* קודם מגרילים גדלים, ואז נותנים את הפנים לשש הבועות הגדולות ביותר,
+           כי פרצוף בבועה זעירה לא ניתן לזיהוי. */
+        const sizes = [];
+        for (let i = 0; i < 16; i++) sizes.push({ i: i, d: 7 + Math.random() * 13 });
+        const biggest = sizes.slice().sort(function(a, c){ return c.d - a.d; }).slice(0, 6);
+        const faceOf = {};
+        biggest.forEach(function(entry, k){ faceOf[entry.i] = window.FACES[k]; });
+
         for (let i = 0; i < 16; i++) {
             const b = document.createElement('i');
-            b.innerHTML = '<b>' + window.goldNoteSvg(i) + '</b>';
-            const d = 7 + Math.random() * 13;
+            b.innerHTML = faceOf[i]
+                ? '<b class="face">' + window.bubbleFace(faceOf[i]) + '</b>'
+                : '<b>' + window.goldNoteSvg(i) + '</b>';
+            if (faceOf[i]) b.dataset.face = faceOf[i];
+            const d = sizes[i].d;
             b.style.setProperty('--d', d.toFixed(1) + 'vmin');
             b.style.setProperty('--c', COLS[i % COLS.length]);
             b.style.setProperty('--t', (7 + Math.random() * 7).toFixed(1) + 's');
