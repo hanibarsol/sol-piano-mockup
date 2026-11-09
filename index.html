@@ -96,6 +96,19 @@
             100% { transform: scale(.8);   opacity: 0 }
         }
 
+        /* החור שנפתח בקרום ברגע הפקיעה, ומתרחב החוצה */
+        .popring {
+            position: fixed; z-index: 2147481900; pointer-events: none;
+            border-radius: 50%; border: 2px solid rgba(255,255,255,.85);
+        }
+
+        /* טיפה זעירה. בלי גרדיאנטים, בגודל הזה ממילא לא רואים אותם,
+           וגרדיאנט על מאה אלמנטים נעים הוא מה שמגמגם בנייד. */
+        .bubpop.tiny {
+            background: rgba(255,255,255,.92);
+            box-shadow: none;
+        }
+
         /* רסיס מים מבועה שנבקעה: המרכז שקוף ורואים דרכו את הרקע,
            נצנוץ לבן בצד אחד, וטבעת סבון דקה בצבע הבועה בקצה. */
         .bubpop {
@@ -238,14 +251,35 @@
                '</svg>';
     };
 
-    /* רסיסי בועה שמתפזרים באוויר. transform ו-opacity בלבד, כדי שלא יכביד. */
-    function popParticles(cx, cy, radius, color, count){
+    /* טבעת החור שנפתח בקרום */
+    function popRing(cx, cy, radius, color){
+        const g = document.createElement('span');
+        g.className = 'popring';
+        const d0 = radius * 0.5;
+        g.style.width  = d0.toFixed(0) + 'px';
+        g.style.height = d0.toFixed(0) + 'px';
+        g.style.left   = (cx - d0 / 2).toFixed(0) + 'px';
+        g.style.top    = (cy - d0 / 2).toFixed(0) + 'px';
+        g.style.borderColor = color;
+        document.body.appendChild(g);
+        if (g.animate) {
+            g.animate([
+                { transform: 'scale(.35)', opacity: .95, borderWidth: '3px' },
+                { transform: 'scale(2.6)', opacity: 0,   borderWidth: '1px' }
+            ], { duration: 320, easing: 'cubic-bezier(.1,.8,.3,1)', fill: 'forwards' });
+        }
+        setTimeout(function(){ g.remove(); }, 480);
+    }
+
+    /* רסס הפקיעה. הקרום נקרע לצד אחד, ולכן הרסס נוטה לאותו כיוון
+       ולא מתפזר באופן אחיד. transform ו-opacity בלבד. */
+    function popParticles(cx, cy, radius, color, count, tearAngle){
         for (let k = 0; k < count; k++) {
             const d = document.createElement('span');
-            d.className = 'bubpop';
-            /* מעט טיפות גדולות והרבה זעירות. התזה אחידה נראית כמו רסיסים. */
-            const big  = Math.random() < 0.28;
-            const size = big ? (8 + Math.random() * 6) : (2.5 + Math.random() * 3.5);
+            /* רוב הרסס זעיר ונוצץ, ומעט טיפות גדולות שנופלות */
+            const big  = Math.random() < 0.22;
+            const size = big ? (7 + Math.random() * 5) : (1.8 + Math.random() * 2.6);
+            d.className = big ? 'bubpop' : 'bubpop tiny';
             d.style.width  = size.toFixed(1) + 'px';
             d.style.height = size.toFixed(1) + 'px';
             d.style.left   = (cx - size / 2).toFixed(0) + 'px';
@@ -255,7 +289,10 @@
 
             /* מים: התזה קצרה החוצה, ומיד כוח המשיכה משתלט והטיפה נופלת.
                בלי סיבוב. גוף שמסתובב נראה כמו שבר, לא כמו טיפה. */
-            const ang   = Math.random() * Math.PI * 2;
+            const spread = Math.PI * 0.62;
+            const ang = (Math.random() < 0.82)
+                ? tearAngle + (Math.random() - 0.5) * spread     /* לכיוון הקריעה */
+                : Math.random() * Math.PI * 2;                   /* מעט לכל עבר */
             const dist  = radius * (0.7 + Math.random() * 1.5);
             const dx    = Math.cos(ang) * dist;
             const up    = Math.sin(ang) * dist * 0.5;      /* התזה אנכית קטנה */
@@ -312,12 +349,16 @@
 
             const colour = b.style.getPropertyValue('--c') || '#9c86ea';
             const bcx = r.left + r.width / 2, bcy = r.top + r.height / 2;
+            const tear = Math.random() * Math.PI * 2;
             if (i === nearest) {
-                popParticles(bcx, bcy, r.width * 0.78, colour, 12);
+                popRing(bcx, bcy, r.width, colour);
+                popParticles(bcx, bcy, r.width * 0.78, colour, 14, tear);
             } else {
+                const wait = 60 + Math.random() * 200;
                 setTimeout(function(){
-                    popParticles(bcx, bcy, r.width * 0.60, colour, 6);
-                }, 60 + Math.random() * 180);
+                    if (r.width > 46) popRing(bcx, bcy, r.width, colour);
+                    popParticles(bcx, bcy, r.width * 0.60, colour, 6, tear);
+                }, wait);
             }
             const size = Math.max(20, r.width * (b.dataset.face ? 0.8 : 0.55));
             const n = document.createElement('span');
@@ -367,13 +408,15 @@
 
         /* קודם מגרילים גדלים, ואז נותנים את הפנים לשש הבועות הגדולות ביותר,
            כי פרצוף בבועה זעירה לא ניתן לזיהוי. */
+        const COUNT = 22;
         const sizes = [];
-        for (let i = 0; i < 16; i++) sizes.push({ i: i, d: 7 + Math.random() * 13 });
-        const biggest = sizes.slice().sort(function(a, c){ return c.d - a.d; }).slice(0, 6);
+        for (let i = 0; i < COUNT; i++) sizes.push({ i: i, d: 6.5 + Math.random() * 13.5 });
+        /* לעשר הבועות הגדולות יש פנים. הדמויות חוזרות, כמו בסרטון שחני הכינה. */
+        const biggest = sizes.slice().sort(function(a, c){ return c.d - a.d; }).slice(0, 10);
         const faceOf = {};
-        biggest.forEach(function(entry, k){ faceOf[entry.i] = window.FACES[k]; });
+        biggest.forEach(function(entry, k){ faceOf[entry.i] = window.FACES[k % window.FACES.length]; });
 
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < COUNT; i++) {
             const b = document.createElement('i');
             b.innerHTML = faceOf[i]
                 ? '<b class="face">' + window.bubbleFace(faceOf[i]) + '</b>'
