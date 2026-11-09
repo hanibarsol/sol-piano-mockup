@@ -223,7 +223,7 @@
   </div>
 </div>
 
-<video id="intro" src="intro.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+<video id="intro" src="intro.mp4" muted playsinline webkit-playsinline preload="auto" aria-hidden="true"></video>
 
 <div id="piano-scroll-wrapper">
     <div id="piano-container">
@@ -236,6 +236,12 @@
     Tone.context.lookAhead = 0;
 
     const startScreen = document.getElementById('start-screen');
+
+    /* להתחיל להוריד את סרטון המעבר כבר עכשיו, כדי שיהיה מוכן בנגיעה */
+    (function(){
+        const v = document.getElementById('intro');
+        if (v && v.load) { try { v.load(); } catch(e) {} }
+    })();
 
     /* תו זהב מצויר, לא אימוג'י. שתי צורות לסירוגין: תו בודד ותו כפול. */
     /* שש הדמויות שיש להן פנים. הדלת של סי אינה דמות ואין לה פנים,
@@ -267,13 +273,37 @@
                '</svg>';
     };
 
-    /* סרטון המעבר. נכנס אחרי שהבועות נבקעות, ונמוג אל הפסנתר.
-       אם הוא לא יוצא לדרך תוך חצי שנייה, מדלגים עליו ונכנסים ישר לפסנתר. */
+    /* אייפון מרשה לנגן סרטון רק אם הבקשה יוצאת מתוך נגיעה אמיתית.
+       לכן נוגעים בו כאן, בתוך המחווה עצמה, ומיד עוצרים ומחזירים לאפס.
+       מאותו רגע מותר לנו להפעיל אותו מתי שנרצה. */
+    let introPrimed = false, introLive = false;
+    function primeIntro(){
+        const v = document.getElementById('intro');
+        if (!v || introPrimed) return;
+        introPrimed = true;
+        try {
+            v.muted = true;
+            const q = v.play();
+            /* לעצור רק אם ההפעלה האמיתית עוד לא התחילה, אחרת נהרוג אותה */
+            if (q && q.then) {
+                q.then(function(){
+                    if (introLive) return;
+                    try { v.pause(); v.currentTime = 0; } catch(e) {}
+                }).catch(function(){});
+            } else if (!introLive) {
+                try { v.pause(); v.currentTime = 0; } catch(e) {}
+            }
+        } catch(e) {}
+    }
+
+    /* סרטון המעבר. מתגלה רק כשהדפדפן מדווח שהוא באמת מתנגן,
+       ואם הוא לא יוצא לדרך בזמן סביר פשוט מדלגים. */
     function playIntro(){
         const v = document.getElementById('intro');
         if (!v || !window.matchMedia('(orientation: landscape)').matches) return;
 
-        let done = false;
+        introLive = true;
+        let done = false, started = false;
         function finish(){
             if (done) return;
             done = true;
@@ -285,12 +315,19 @@
         }
 
         v.classList.add('on');
-        /* מופיע רק אחרי שרואים את הבועות נבקעות */
-        setTimeout(function(){ v.classList.add('vis'); }, 260);
+
+        function onPlaying(){
+            started = true;
+            v.classList.add('vis');
+            const left = Math.max(600, (v.duration || 2.6) * 1000 - v.currentTime * 1000);
+            setTimeout(finish, left + 120);
+        }
+        /* מתגלה רק כשהוא באמת רץ. בלי זה רואים מלבן שחור. */
+        v.addEventListener('playing', onPlaying, { once: true });
+        /* אם הוא כבר רץ מרגע השחרור, האירוע לא יירה שוב */
+        if (!v.paused && v.currentTime > 0) onPlaying();
 
         v.addEventListener('ended', finish, { once: true });
-        /* רשת ביטחון: גם אם ended לא נורה, הוא יורד בזמן */
-        setTimeout(finish, 3400);
 
         try {
             v.muted = true;
@@ -299,10 +336,9 @@
             if (q && q.catch) q.catch(function(){ finish(); });
         } catch(e) { finish(); }
 
-        /* לא התחיל בכלל, לא נחסום את הכניסה */
-        setTimeout(function(){
-            if (v.currentTime === 0 || v.readyState < 2) finish();
-        }, 600);
+        /* לא התחיל בזמן סביר: מדלגים. 400 קילובייט בסלולרי
+           לא נטענים בחצי שנייה, ולכן הסף כאן נדיב. */
+        setTimeout(function(){ if (!started) finish(); }, 1800);
     }
 
     /* טבעת החור שנפתח בקרום */
@@ -525,6 +561,7 @@
         if (ev && typeof ev.clientX === 'number' && (ev.clientX || ev.clientY)) {
             window.__lastTouch = { x: ev.clientX, y: ev.clientY };
         }
+        primeIntro();        /* חייב להיות לפני ה-await, אחרת אייפון כבר לא סופר את זה כנגיעה */
         await Tone.start();
         touched = true;
         initTouchControls();   /* הקלידים מוכנים גם אם עוד לא סובבו */
