@@ -334,12 +334,18 @@
         } catch(e) { finish(); }
 
         /* השמע רץ לצד הסרטון. אם הוא נופל, הסרטון ממשיך בשקט. */
-        if (snd) {
+        function startSound(){
+            if (!snd || done) return;
             try {
                 const qs = snd.play();
                 if (qs && qs.catch) qs.catch(function(){});
             } catch(e) {}
         }
+        startSound();
+        /* ביטוח: אם השחרור שבתוך המחווה עצר אותו אחרי שכבר התחלנו,
+           מפעילים שוב. בלי זה הכניסה יכולה לצאת שקטה. */
+        setTimeout(function(){ if (snd && snd.paused) startSound(); }, 350);
+        setTimeout(function(){ if (snd && snd.paused) startSound(); }, 900);
 
         /* לא התחיל בזמן סביר: מדלגים. 400 קילובייט בסלולרי
            לא נטענים בחצי שנייה, ולכן הסף כאן נדיב. */
