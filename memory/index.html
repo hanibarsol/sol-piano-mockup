@@ -371,12 +371,23 @@
     }
   }
 
+  /* כשהמנגינה מתחילה, הדמויות נחות. הן חוזרות לתמונה הרגילה בדהייה,
+     והסרטונים נעצרים כדי שלא ירוצו לריק. במשחק הבא הכול נבנה מחדש. */
+  function restAll(){
+    [].forEach.call(board.querySelectorAll('.card.playing'), function(c){
+      c.classList.remove('playing');
+      var v=c.querySelector('video.clip');
+      if(v){ try{ v.pause(); }catch(e){} }
+    });
+  }
+
   function finish(){
     /* בלי ניגון כל התווים בסוף, לבקשת חני ב-2026-11-07: "זה נשמע רע".
        במקומם מוזיקת סיום, שמתחילה רק אחרי שצליל הזוג האחרון נגמר. */
     setTimeout(function(){
       try{ bgm.pause(); }catch(e){}
       play('snd/win.mp3');
+      restAll();
     }, 1500);
     setTimeout(function(){ again.classList.add('show'); }, 1800);
   }
