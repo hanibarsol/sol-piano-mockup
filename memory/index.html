@@ -44,7 +44,7 @@
   #board{
     height:100%;
     display:grid; gap:clamp(5px,1.4vmin,12px);
-    grid-template-columns:repeat(7,1fr); grid-template-rows:repeat(2,1fr);
+    grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(2,1fr);
     padding:clamp(6px,1.6vmin,14px);
     padding-left:max(clamp(6px,1.6vmin,14px),env(safe-area-inset-left,0px));
     padding-right:max(clamp(6px,1.6vmin,14px),env(safe-area-inset-right,0px));
@@ -192,7 +192,10 @@
     {id:'fa',  img:'%D7%A4%D7%94.png',       note:'f4', col:'--c-fa',  anim:1},
     {id:'sol', img:'%D7%A1%D7%95%D7%9C.png', note:'g4', col:'--c-sol', anim:1},
     {id:'la',  img:'%D7%9C%D7%94.png',       note:'a4', col:'--c-la',  anim:1},
-    {id:'si',  img:'%D7%A1%D7%99.png',       note:'b4', col:'--c-si',  anim:1}
+    {id:'si',  img:'%D7%A1%D7%99.png',       note:'b4', col:'--c-si',  anim:1},
+    /* הזוג השמיני: כל המשפחה יחד. הוא ממלא את שתי המשבצות
+       שנשארו ריקות ברשת של 4 על 4 בנייד. */
+    {id:'family', img:'',                   note:'family', col:'--c-do', anim:1}
   ];
   var DOTS=['#ff6b6b','#ffa35c','#f2cf52','#5fcb82','#5cacea','#9c86ea','#e37bcb'];
 
