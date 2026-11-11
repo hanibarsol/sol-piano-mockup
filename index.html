@@ -187,6 +187,7 @@
 
 <video id="intro" src="intro-v4.mp4" muted playsinline webkit-playsinline preload="auto" aria-hidden="true"></video>
 <div id="skip-tip">געו כדי לדלג</div>
+<audio id="intro-snd" src="intro-snd-v1.mp3" preload="auto" playsinline></audio>
 
 <div id="piano-scroll-wrapper">
     <div id="piano-container">
@@ -242,8 +243,19 @@
     let introPrimed = false, introLive = false;
     function primeIntro(){
         const v = document.getElementById('intro');
+        const a = document.getElementById('intro-snd');
         if (!v || introPrimed) return;
         introPrimed = true;
+        /* גם השמע נוגע כאן, בתוך המחווה, אחרת אייפון יסרב לו אחר כך */
+        if (a) {
+            try {
+                const qa = a.play();
+                if (qa && qa.then) {
+                    qa.then(function(){ if (!introLive) { try { a.pause(); } catch(e) {} } })
+                      .catch(function(){});
+                }
+            } catch(e) {}
+        }
         try {
             v.muted = true;
             const q = v.play();
@@ -268,10 +280,12 @@
         if (!v || !window.matchMedia('(orientation: landscape)').matches) return;
 
         introLive = true;
+        const snd = document.getElementById('intro-snd');
         let done = false, started = false;
         function finish(){
             if (done) return;
             done = true;
+            if (snd) { try { snd.pause(); } catch(e) {} }
             const t = document.getElementById('skip-tip');
             if (t) t.classList.remove('show');
             v.classList.add('out');
@@ -318,6 +332,14 @@
             const q = v.play();
             if (q && q.catch) q.catch(function(){ finish(); });
         } catch(e) { finish(); }
+
+        /* השמע רץ לצד הסרטון. אם הוא נופל, הסרטון ממשיך בשקט. */
+        if (snd) {
+            try {
+                const qs = snd.play();
+                if (qs && qs.catch) qs.catch(function(){});
+            } catch(e) {}
+        }
 
         /* לא התחיל בזמן סביר: מדלגים. 400 קילובייט בסלולרי
            לא נטענים בחצי שנייה, ולכן הסף כאן נדיב. */
