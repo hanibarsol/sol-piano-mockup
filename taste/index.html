@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>טעימה מהמסע של סול</title>
+<style>
+  :root{
+    --purple:#43225A; --orange:#F2A412; --blue:#3B6BB2; --red:#CC3717; --turq:#189E8A;
+    --c-do:#ff6b6b; --c-re:#ffa35c;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:#140820; color:#fff; overflow:hidden;
+    font-family:system-ui,"Segoe UI",Arial,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    display:flex; flex-direction:column;
+  }
+
+  /* ---------- רצועה עליונה ---------- */
+  #bar{
+    flex:0 0 auto; display:flex; align-items:center; gap:10px;
+    padding:7px max(12px,env(safe-area-inset-right,0px)) 7px max(12px,env(safe-area-inset-left,0px));
+    background:linear-gradient(180deg,#34343a,#1b1b20);
+    border-bottom:2px solid var(--turq);
+  }
+  #back{
+    width:clamp(30px,7dvh,38px); height:clamp(30px,7dvh,38px); flex:0 0 auto;
+    border-radius:50%; border:none; background:#17A79B; cursor:pointer;
+    display:none; align-items:center; justify-content:center;
+  }
+  #back.show{display:flex}
+  #back svg{width:56%; height:56%; display:block}
+  #bar b{color:#EDEDF2; font-size:clamp(12px,3dvh,15px); font-weight:800}
+
+  /* ---------- התפריט ---------- */
+  #menu{
+    flex:1 1 auto; overflow-y:auto; overflow-x:hidden;
+    padding:clamp(12px,3dvh,22px) max(14px,env(safe-area-inset-right,0px))
+            clamp(14px,3dvh,24px) max(14px,env(safe-area-inset-left,0px));
+  }
+  #menu.hide{display:none}
+  .wrap{max-width:620px; margin:0 auto}
+
+  h1{
+    margin:0 0 6px; font-size:clamp(17px,4.4dvh,23px); font-weight:800; text-align:center;
+  }
+  .sub{
+    margin:0 0 clamp(12px,2.6dvh,20px); text-align:center;
+    font-size:clamp(12.5px,2.6dvh,15px); line-height:1.65; opacity:.82;
+  }
+
+  .row{
+    display:flex; align-items:center; gap:13px; width:100%;
+    border:none; border-radius:17px; cursor:pointer; text-align:right;
+    background:rgba(255,255,255,.07); color:#fff;
+    padding:clamp(9px,1.8dvh,14px) 14px; margin-bottom:clamp(8px,1.6dvh,12px);
+    font-family:inherit; transition:background .15s, transform .08s;
+  }
+  .row:active{transform:scale(.985); background:rgba(255,255,255,.14)}
+  .faces{flex:0 0 auto; display:flex; align-items:center}
+  .faces img{
+    width:clamp(38px,8dvh,52px); height:clamp(38px,8dvh,52px);
+    border-radius:50%; display:block; object-fit:cover;
+    border:3px solid var(--ring,#fff); background:#fff;
+  }
+  .faces img + img{margin-right:-14px}
+  .txt{flex:1; min-width:0}
+  .txt strong{display:block; font-size:clamp(14px,3dvh,17px); font-weight:800}
+  .txt small{display:block; font-size:clamp(11.5px,2.3dvh,13px); font-weight:600; opacity:.7; margin-top:3px}
+  .go{
+    flex:0 0 auto; width:30px; height:30px; border-radius:50%;
+    background:var(--turq); display:grid; place-items:center;
+  }
+  .go svg{width:52%; height:52%; display:block}
+
+  /* ---------- ההזמנה להמשיך ---------- */
+  .more{
+    margin-top:clamp(12px,2.6dvh,20px); padding:clamp(12px,2.4dvh,18px) 16px;
+    border-radius:18px; background:rgba(242,164,18,.14);
+    border:1px solid rgba(242,164,18,.35);
+  }
+  .more h2{margin:0 0 6px; font-size:clamp(14px,3dvh,17px); font-weight:800; color:var(--orange)}
+  .more p{margin:0 0 clamp(10px,2dvh,14px); font-size:clamp(12.5px,2.5dvh,14.5px); line-height:1.7; opacity:.9}
+  #buy{
+    display:block; width:100%; border:none; cursor:pointer;
+    border-radius:999px; background:var(--orange); color:#3a2300;
+    padding:clamp(10px,2dvh,14px); font-family:inherit;
+    font-size:clamp(14px,2.8dvh,16.5px); font-weight:800;
+    box-shadow:0 4px 0 rgba(0,0,0,.28);
+  }
+  #buy:active{transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.28)}
+  #buy.pending{background:rgba(255,255,255,.14); color:rgba(255,255,255,.75); box-shadow:none}
+
+  /* ---------- השיעור ---------- */
+  #stage{flex:1 1 auto; display:none; min-height:0}
+  #stage.show{display:block}
+  #frame{width:100%; height:100%; border:0; display:block; background:#fff}
+</style>
+</head>
+<body>
+
+<div id="bar">
+  <button id="back" aria-label="חזרה לטעימה">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9 5l7 7-7 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <b id="title">טעימה מהמסע של סול</b>
+</div>
+
+<div id="menu">
+  <div class="wrap">
+    <h1>המסע של סול</h1>
+    <p class="sub">לומדים תווים דרך הדמויות של המשפחה. שלושת השיעורים הראשונים פתוחים, בלי הרשמה ובלי תשלום.</p>
+
+    <button class="row" data-lesson="do" data-title="דו יוצא לדרך">
+      <span class="faces"><img src="../faces/do-v2.png" alt="" style="--ring:var(--c-do)"></span>
+      <span class="txt"><strong>דו יוצא לדרך</strong><small>מכירים את הצליל הראשון</small></span>
+      <span class="go"><svg viewBox="0 0 24 24" fill="none"><path d="M14 5l-7 7 7 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </button>
+
+    <button class="row" data-lesson="re" data-title="רה יוצאת לדרך">
+      <span class="faces"><img src="../faces/re-v2.png" alt="" style="--ring:var(--c-re)"></span>
+      <span class="txt"><strong>רה יוצאת לדרך</strong><small>מכירים את הצליל השני</small></span>
+      <span class="go"><svg viewBox="0 0 24 24" fill="none"><path d="M14 5l-7 7 7 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </button>
+
+    <button class="row" data-lesson="dore" data-title="דו ורה ביחד">
+      <span class="faces">
+        <img src="../faces/re-v2.png" alt="" style="--ring:var(--c-re)">
+        <img src="../faces/do-v2.png" alt="" style="--ring:var(--c-do)">
+      </span>
+      <span class="txt"><strong>דו ורה ביחד</strong><small>שומעים את השניים זה לצד זה</small></span>
+      <span class="go"><svg viewBox="0 0 24 24" fill="none"><path d="M14 5l-7 7 7 7" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </button>
+
+    <div class="more">
+      <h2>וממי והלאה?</h2>
+      <p>המסע ממשיך עם מי, פה, סול, לה וסי, עד שכל המשפחה מנגנת יחד.</p>
+      <button id="buy" class="pending">הקישור לרכישה עוד לא חובר</button>
+    </div>
+  </div>
+</div>
+
+<div id="stage"><iframe id="frame" title="שיעור" allow="autoplay"></iframe></div>
+
+<script>
+(function(){
+  var BASE  = 'https://hanibarsol.github.io/sol-journey/lessons/';
+  var BUY   = '';            /* כתובת הרכישה. ריקה עד שחני תיתן אותה. */
+
+  var menu  = document.getElementById('menu'),
+      stage = document.getElementById('stage'),
+      frame = document.getElementById('frame'),
+      back  = document.getElementById('back'),
+      title = document.getElementById('title'),
+      buy   = document.getElementById('buy');
+
+  function openLesson(name, label){
+    frame.src = BASE + name + '.html';
+    title.textContent = label;
+    menu.classList.add('hide');
+    stage.classList.add('show');
+    back.classList.add('show');
+  }
+
+  function closeLesson(){
+    /* מרוקנים, אחרת השיעור ממשיך להשמיע ברקע */
+    frame.src = 'about:blank';
+    title.textContent = 'טעימה מהמסע של סול';
+    stage.classList.remove('show');
+    back.classList.remove('show');
+    menu.classList.remove('hide');
+  }
+
+  [].forEach.call(document.querySelectorAll('.row'), function(b){
+    b.addEventListener('click', function(){
+      openLesson(b.dataset.lesson, b.dataset.title);
+    });
+  });
+  back.addEventListener('click', closeLesson);
+
+  if (BUY) {
+    buy.classList.remove('pending');
+    buy.textContent = 'להמשיך את המסע';
+    buy.addEventListener('click', function(){ window.open(BUY, '_blank'); });
+  }
+})();
+</script>
+</body>
+</html>

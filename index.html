@@ -978,8 +978,9 @@ window.initTouchControls = function(){
     },{passive:false});
   });
   /* הכרית הכתומה: משחק הזיכרון. נשאר טעון כדי לא לאבד התקדמות */
-  var GAME='memory/';
-  var padGame=document.querySelector('.pad-wrap.p2');
+  var GAME='memory/', TASTE='taste/';
+  var padGame=document.querySelector('.pad-wrap.p2'),
+      padTaste=document.querySelector('.pad-wrap.p3');
   function openGame(e){
     e.preventDefault(); e.stopPropagation();
     kind='game';
@@ -991,6 +992,20 @@ window.initTouchControls = function(){
   }
   if(padGame) ['touchstart','mousedown'].forEach(function(ev){
     padGame.addEventListener(ev,openGame,{passive:false});
+  });
+
+  /* הכרית הטורקיז: טעימה מהמסע של סול */
+  function openTaste(e){
+    e.preventDefault(); e.stopPropagation();
+    kind='taste';
+    frame.title='טעימה מהמסע של סול';
+    if(frame.src.indexOf(TASTE)<0) frame.src=TASTE;
+    box.classList.add('open');
+    document.body.classList.add('overlay');
+    hideTip();
+  }
+  if(padTaste) ['touchstart','mousedown'].forEach(function(ev){
+    padTaste.addEventListener(ev,openTaste,{passive:false});
   });
 })();
 </script>
