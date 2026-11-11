@@ -387,8 +387,9 @@
     setTimeout(function(){
       try{ bgm.pause(); }catch(e){}
       play('snd/win.mp3');
-      restAll();
     }, 1500);
+    /* ההנפשות ממשיכות עוד שלוש שניות לתוך המנגינה, ורק אז נחות */
+    setTimeout(restAll, 4500);
     setTimeout(function(){ again.classList.add('show'); }, 1800);
   }
 
