@@ -103,6 +103,20 @@
     100% { transform:scale(1) }
   }
 
+  /* סרטון הסיום: המשפחה הולכת יחד אל האור, אחרי שכולם נמצאו */
+  #ending{
+    position:fixed; inset:0; z-index:80; display:none;
+    background:#140820; opacity:0; transition:opacity .5s ease;
+    align-items:center; justify-content:center;
+  }
+  #ending.on{display:flex}
+  #ending.vis{opacity:1}
+  #ending.out{opacity:0; transition:opacity .6s ease}
+  #ending video{
+    width:100%; height:100%; object-fit:contain; display:block;
+    background:#140820;
+  }
+
   /* ---------- סיום ---------- */
   #again{
     position:fixed; z-index:60; left:50%; bottom:max(12px,env(safe-area-inset-bottom,0px));
@@ -142,6 +156,10 @@
 
 <div id="board" aria-label="משחק הזיכרון"></div>
 <button id="again">עוד פעם</button>
+
+<div id="ending" aria-hidden="true">
+  <video id="ending-vid" src="end-v1.mp4" muted playsinline webkit-playsinline preload="auto"></video>
+</div>
 
 <div id="start">
   <h1>מי מסתתר כאן?</h1>
@@ -349,6 +367,7 @@
 
   function pick(card){
     if(lock) return;
+    if(document.getElementById('ending').classList.contains('on')) return;
     if(card.classList.contains('up')||card.classList.contains('done')) return;
 
     turn(card,true);
@@ -371,14 +390,58 @@
     }
   }
 
-  /* כשהמנגינה מתחילה, הדמויות נחות. הן חוזרות לתמונה הרגילה בדהייה,
-     והסרטונים נעצרים כדי שלא ירוצו לריק. במשחק הבא הכול נבנה מחדש. */
+  /* כשהמנגינה מתחילה, הדמויות נחות וחוזרות לתמונה הרגילה בדהייה.
+     הסרטונים לא רק נעצרים אלא **מוסרים מהדף**, כי לדפדפן יש מגבלה על
+     כמה סרטונים מפוענחים יחד, וסרטון הסיום צריך את המקום. במשחק הבא
+     הלוח נבנה מחדש וכולם חוזרים. */
   function restAll(){
-    [].forEach.call(board.querySelectorAll('.card.playing'), function(c){
+    [].forEach.call(board.querySelectorAll('.card'), function(c){
       c.classList.remove('playing');
       var v=c.querySelector('video.clip');
-      if(v){ try{ v.pause(); }catch(e){} }
+      if(v){
+        try{ v.pause(); v.removeAttribute('src'); v.load(); }catch(e){}
+        if(v.parentNode) v.parentNode.removeChild(v);
+      }
     });
+  }
+
+  /* סרטון הסיום. עולה אחרי שהדמויות נחו, ואפשר לדלג בנגיעה.
+     אם הוא לא יוצא לדרך, הכפתור מופיע כרגיל ושום דבר לא נתקע. */
+  function playEnding(){
+    var box=document.getElementById('ending'), v=document.getElementById('ending-vid');
+    if(!box||!v){ again.classList.add('show'); return; }
+
+    var done=false, started=false;
+    function close(){
+      if(done) return;
+      done=true;
+      box.classList.add('out');
+      setTimeout(function(){
+        box.classList.remove('on','vis','out');
+        try{ v.pause(); }catch(e){}
+        again.classList.add('show');
+      }, 640);
+    }
+
+    box.classList.add('on');
+    v.addEventListener('playing', function(){
+      started=true;
+      box.classList.add('vis');
+      var left=Math.max(600,(v.duration||4.6)*1000 - v.currentTime*1000);
+      setTimeout(close, left+120);
+    }, {once:true});
+    v.addEventListener('ended', close, {once:true});
+    ['touchstart','mousedown'].forEach(function(ev){
+      box.addEventListener(ev, function(e){ e.preventDefault(); close(); }, {passive:false});
+    });
+
+    try{
+      v.muted=true;
+      var q=v.play();
+      if(q&&q.catch) q.catch(function(){ close(); });
+    }catch(e){ close(); }
+
+    setTimeout(function(){ if(!started) close(); }, 1800);
   }
 
   function finish(){
@@ -390,10 +453,15 @@
     }, 1500);
     /* ההנפשות ממשיכות עוד שלוש שניות לתוך המנגינה, ורק אז נחות */
     setTimeout(restAll, 4500);
-    setTimeout(function(){ again.classList.add('show'); }, 1800);
+    /* ואז המשפחה הולכת יחד אל האור. הכפתור מחכה לסוף הסרטון. */
+    setTimeout(playEnding, 4700);
   }
 
-  function newGame(){ startBgm(); build(); requestAnimationFrame(function(){ dealOut(); }); }
+  function newGame(){
+    var box=document.getElementById('ending');
+    if(box) box.classList.remove('on','vis','out');
+    startBgm(); build(); requestAnimationFrame(function(){ dealOut(); });
+  }
 
   goBtn.addEventListener('click',function(){
     startEl.hidden=true;
